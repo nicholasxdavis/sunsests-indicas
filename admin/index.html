@@ -1,258 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard - Sunsets & Indicas</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-  :root { --bg: #0b0f17; --card: #121826; --text: #e5e7eb; --muted:#9ca3af; --brand:#10b981; --danger:#ef4444; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
-  header { padding: 20px; border-bottom: 1px solid #1f2937; display:flex; align-items:center; justify-content: space-between; }
-  header h1 { margin:0; font-size: 18px; font-weight: 700; }
-  header .right { display:flex; gap:10px; align-items:center; }
-  main { max-width: 1100px; margin: 24px auto; padding: 0 16px 48px; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:16px; }
-  .card { background: var(--card); border:1px solid #1f2937; border-radius: 10px; padding:16px; }
-  .card h2 { margin:0 0 10px; font-size:16px; }
-  label { display:block; font-size:12px; color: var(--muted); margin: 10px 0 4px; }
-  input, textarea { width:100%; background:#0d1420; border:1px solid #233047; color:var(--text); border-radius:8px; padding:10px 12px; outline:none; }
-  textarea { min-height: 90px; resize: vertical; }
-  .row { display:flex; gap:10px; }
-  .row > * { flex:1; }
-  button { background: var(--brand); color:#00150f; border:none; border-radius:8px; padding:10px 14px; font-weight:600; cursor:pointer; }
-  button.secondary { background:#1f2937; color: var(--text); border:1px solid #2b3a54; }
-  button.danger { background: var(--danger); color:#fff; }
-  .muted { color: var(--muted); font-size: 12px; }
-  ul.list { list-style: none; padding:0; margin:0; display:flex; flex-direction: column; gap:8px; max-height: 360px; overflow:auto; }
-  .item { display:flex; gap:12px; align-items:center; justify-content: space-between; background:#0d1420; border:1px solid #1f2937; border-radius:8px; padding:10px 12px; }
-  .item .meta { display:flex; flex-direction: column; gap:4px; }
-  .hidden { display:none !important; }
-  .authbar { font-size: 12px; color: var(--muted); }
-  .pill { padding: 2px 8px; border-radius: 999px; background:#112e26; color:#7ff0c8; font-size:11px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunsets & Indicas - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+      .modal { display:none; position: fixed; inset: 0; background: rgba(0,0,0,.5); align-items: center; justify-content: center; z-index: 50; }
+      .show { display:flex; }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: { extend: { colors: { primary: '#10b981', dark: '#0b0f17' } } }
+      }
+    </script>
 </head>
-<body>
-  <header>
-    <h1>Admin Dashboard</h1>
-    <div class="right">
-      <span id="whoami" class="authbar muted">Not signed in</span>
-      <button id="btnLogout" class="secondary hidden">Logout</button>
+<body class="bg-gray-50">
+  <!-- Password Overlay -->
+  <div id="authOverlay" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white w-full max-w-md rounded-xl shadow-2xl p-6">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold">Admin Dashboard</h2>
+        <p class="text-gray-500">Enter credentials to continue</p>
+      </div>
+      <form id="authForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input id="email" type="email" value="nic@blacnova.net" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <input id="password" type="password" value="2900" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
+        </div>
+        <label class="inline-flex items-center gap-2 text-sm text-gray-600">
+          <input id="remember" type="checkbox" class="rounded"> Remember me
+        </label>
+        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 rounded-md">Continue</button>
+        <p id="authMsg" class="text-sm text-red-600 text-center"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-emerald-50 text-emerald-600"><i class="fa-solid fa-leaf"></i></span>
+        <h1 class="font-semibold">Sunsets & Indicas Admin</h1>
+      </div>
+      <div class="flex items-center gap-3 text-sm">
+        <span id="whoami" class="text-gray-500">Not signed in</span>
+        <button id="logoutBtn" class="hidden px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50">Logout</button>
+      </div>
     </div>
   </header>
-  <main>
-    <div id="loginCard" class="card">
-      <h2>Sign in</h2>
-      <p class="muted">Use your admin email and password.</p>
-      <div class="row">
-        <div>
-          <label>Email</label>
-          <input id="email" type="email" placeholder="nic@blacnova.net" value="nic@blacnova.net">
-        </div>
-        <div>
-          <label>Password</label>
-          <input id="password" type="password" placeholder="••••" value="2900">
-        </div>
+
+  <!-- Main -->
+  <main id="main" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 hidden">
+    <!-- Actions -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+      <div>
+        <h2 class="text-xl font-semibold">Content</h2>
+        <p class="text-gray-500 text-sm">Create and manage blogs and issues</p>
       </div>
-      <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-        <button id="btnLogin">Sign in</button>
-        <span id="loginMsg" class="muted"></span>
+      <div class="flex items-center gap-2">
+        <button id="newBlogBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md"><i class="fa fa-plus mr-2"></i>New Blog</button>
+        <button id="newIssueBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"><i class="fa fa-file mr-2"></i>New Issue</button>
       </div>
     </div>
 
-    <div id="dash" class="hidden">
-      <div class="grid">
-        <div class="card">
-          <h2>Create Blog</h2>
-          <label>Title</label>
-          <input id="b_title" type="text" placeholder="Title">
-          <label>Description</label>
-          <textarea id="b_desc" placeholder="Short description"></textarea>
-          <div class="row">
-            <div>
-              <label>Image URL</label>
-              <input id="b_image" type="text" placeholder="https://...">
-            </div>
-            <div>
-              <label>Redirect URL</label>
-              <input id="b_redirect" type="text" placeholder="https://...">
-            </div>
-          </div>
-          <label>Button Text</label>
-          <input id="b_btn" type="text" value="Read">
-          <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-            <button id="btnCreateBlog">Publish Blog</button>
-            <span id="b_msg" class="muted"></span>
-          </div>
+    <!-- Lists -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section class="bg-white border border-gray-200 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold">Blogs</h3>
+          <button id="refreshBlogs" class="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50">Refresh</button>
         </div>
-
-        <div class="card">
-          <h2>Create Issue <span class="pill">admin only</span></h2>
-          <label>Title</label>
-          <input id="i_title" type="text" placeholder="Title">
-          <label>Description</label>
-          <textarea id="i_desc" placeholder="Short description"></textarea>
-          <div class="row">
-            <div>
-              <label>Image URL</label>
-              <input id="i_image" type="text" placeholder="https://...">
-            </div>
-            <div>
-              <label>Redirect URL</label>
-              <input id="i_redirect" type="text" placeholder="https://...">
-            </div>
-          </div>
-          <label>Button Text</label>
-          <input id="i_btn" type="text" value="View">
-          <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-            <button id="btnCreateIssue">Publish Issue</button>
-            <span id="i_msg" class="muted"></span>
-          </div>
+        <ul id="blogsList" class="space-y-2"></ul>
+      </section>
+      <section class="bg-white border border-gray-200 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold">Issues</h3>
+          <button id="refreshIssues" class="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50">Refresh</button>
         </div>
-      </div>
-
-      <div class="grid" style="margin-top:16px;">
-        <div class="card">
-          <h2>Blogs</h2>
-          <div style="display:flex; gap:8px; margin-bottom:8px;">
-            <button id="btnRefreshBlogs" class="secondary">Refresh</button>
-          </div>
-          <ul id="blogsList" class="list"></ul>
-        </div>
-        <div class="card">
-          <h2>Issues</h2>
-          <div style="display:flex; gap:8px; margin-bottom:8px;">
-            <button id="btnRefreshIssues" class="secondary">Refresh</button>
-          </div>
-          <ul id="issuesList" class="list"></ul>
-        </div>
-      </div>
+        <ul id="issuesList" class="space-y-2"></ul>
+      </section>
     </div>
   </main>
-<script>
-(function(){
-  const qs = (id) => document.getElementById(id);
-  const state = { email: null, password: null, role: null };
 
-  function base64(s){ return btoa(unescape(encodeURIComponent(s))); }
-  function authHeader(){ if(!(state.email && state.password)) return {}; return { 'Authorization': 'Basic ' + base64(state.email+ ':' + state.password) }; }
-  async function api(path, opts={}){
-    const res = await fetch(path, { ...opts, headers: { 'Content-Type':'application/json', ...(opts.headers||{}), ...authHeader() }});
-    if(res.status === 401){ throw new Error('AUTH_REQUIRED'); }
-    if(!res.ok){ const t = await res.text().catch(()=> ''); throw new Error(t || ('HTTP_'+res.status)); }
-    const ct = res.headers.get('content-type')||'';
-    return ct.includes('application/json') ? res.json() : res.text();
-  }
+  <!-- Create Blog Modal -->
+  <div id="blogModal" class="modal">
+    <div class="bg-white w-full max-w-xl rounded-xl shadow-xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold text-lg">Create Blog</h3>
+        <button data-close="blogModal" class="text-gray-500 hover:text-gray-700"><i class="fa fa-times"></i></button>
+      </div>
+      <form id="blogForm" class="grid gap-3">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Title</label>
+          <input id="b_title" class="w-full border rounded-md px-3 py-2" required>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Description</label>
+          <textarea id="b_desc" class="w-full border rounded-md px-3 py-2" rows="3" required></textarea>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Image URL</label>
+            <input id="b_image" class="w-full border rounded-md px-3 py-2" placeholder="https://...">
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Redirect URL</label>
+            <input id="b_redirect" class="w-full border rounded-md px-3 py-2" placeholder="/main/blogs/example.html or https://...">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Button Text</label>
+          <input id="b_btn" class="w-full border rounded-md px-3 py-2" value="Read">
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" data-close="blogModal" class="px-3 py-2 border rounded-md">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-emerald-500 text-white">Publish</button>
+        </div>
+        <p id="b_msg" class="text-sm text-gray-500"></p>
+      </form>
+    </div>
+  </div>
 
-  function saveCreds(){ localStorage.setItem('admin_email', state.email||''); localStorage.setItem('admin_password', state.password||''); }
-  function loadCreds(){ state.email = localStorage.getItem('admin_email')||''; state.password = localStorage.getItem('admin_password')||''; }
-  function clearCreds(){ state.email = state.password = state.role = null; localStorage.removeItem('admin_email'); localStorage.removeItem('admin_password'); }
+  <!-- Create Issue Modal -->
+  <div id="issueModal" class="modal">
+    <div class="bg-white w-full max-w-xl rounded-xl shadow-xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold text-lg">Create Issue</h3>
+        <button data-close="issueModal" class="text-gray-500 hover:text-gray-700"><i class="fa fa-times"></i></button>
+      </div>
+      <form id="issueForm" class="grid gap-3">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Title</label>
+          <input id="i_title" class="w-full border rounded-md px-3 py-2" required>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Description</label>
+          <textarea id="i_desc" class="w-full border rounded-md px-3 py-2" rows="3"></textarea>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Image URL</label>
+            <input id="i_image" class="w-full border rounded-md px-3 py-2" placeholder="https://...">
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Redirect URL</label>
+            <input id="i_redirect" class="w-full border rounded-md px-3 py-2" placeholder="/main/issues/test_issue.html or https://...">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Button Text</label>
+          <input id="i_btn" class="w-full border rounded-md px-3 py-2" value="View">
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" data-close="issueModal" class="px-3 py-2 border rounded-md">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-indigo-500 text-white">Publish</button>
+        </div>
+        <p id="i_msg" class="text-sm text-gray-500"></p>
+      </form>
+    </div>
+  </div>
 
-  function setSignedInUI(signedIn, email){
-    qs('loginCard').classList.toggle('hidden', signedIn);
-    qs('dash').classList.toggle('hidden', !signedIn);
-    qs('btnLogout').classList.toggle('hidden', !signedIn);
-    qs('whoami').textContent = signedIn ? (email + (state.role ? ' ('+state.role+')' : '')) : 'Not signed in';
-  }
+  <script>
+  (function(){
+    const $ = (id) => document.getElementById(id);
+    const state = { email: null, password: null, role: null };
 
-  async function loadMe(){
-    try {
-      const me = await api('/api/me');
-      state.role = me.role || null;
-      setSignedInUI(true, me.email || state.email);
-      await Promise.all([refreshBlogs(), refreshIssues()]);
-    } catch (e) {
-      setSignedInUI(false);
-      throw e;
+    function b64(s){ return btoa(unescape(encodeURIComponent(s))); }
+    function auth(){ return state.email && state.password ? { 'Authorization': 'Basic ' + b64(state.email + ':' + state.password) } : {}; }
+    async function api(path, opts={}){
+      const res = await fetch(path, { ...opts, headers: { 'Content-Type':'application/json', ...(opts.headers||{}), ...auth() }});
+      if(res.status === 401){ throw new Error('AUTH_REQUIRED'); }
+      if(!res.ok){ const t = await res.text().catch(()=> ''); throw new Error(t || ('HTTP_'+res.status)); }
+      const ct = res.headers.get('content-type')||''; return ct.includes('application/json') ? res.json() : res.text();
     }
-  }
 
-  async function refreshBlogs(){
-    const list = qs('blogsList'); list.innerHTML = '<li class="muted">Loading…</li>';
-    const items = await api('/api/blogs');
-    list.innerHTML = '';
-    if(!items.length){ list.innerHTML = '<li class="muted">No blogs yet.</li>'; return; }
-    for(const it of items){
-      const li = document.createElement('li'); li.className='item';
-      const meta = document.createElement('div'); meta.className='meta';
-      meta.innerHTML = `<strong>${escapeHtml(it.title||'Untitled')}</strong><span class="muted">#${it.id} · ${new Date(it.created_at).toLocaleString()}</span>`;
+    function setSignedIn(signedIn, email){
+      $('authOverlay').style.display = signedIn ? 'none' : 'flex';
+      $('main').classList.toggle('hidden', !signedIn);
+      $('logoutBtn').classList.toggle('hidden', !signedIn);
+      $('whoami').textContent = signedIn ? (email + (state.role? ' ('+state.role+')':'')) : 'Not signed in';
+    }
+
+    async function me(){
+      const u = await api('/api/me');
+      state.role = u.role || null; setSignedIn(true, u.email || state.email);
+      await Promise.all([loadBlogs(), loadIssues()]);
+    }
+
+    function saveCreds(){ localStorage.setItem('admin_email', state.email||''); localStorage.setItem('admin_password', state.password||''); }
+    function loadCreds(){ state.email = localStorage.getItem('admin_email')||''; state.password = localStorage.getItem('admin_password')||''; }
+    function clearCreds(){ state.email = state.password = state.role = null; localStorage.removeItem('admin_email'); localStorage.removeItem('admin_password'); }
+
+    // Render list item
+    function listItem(entry, type){
+      const li = document.createElement('li');
+      li.className = 'flex items-center justify-between gap-3 border rounded-lg px-3 py-2';
+      const left = document.createElement('div');
+      left.className = 'min-w-0';
+      left.innerHTML = '<div class="font-medium truncate">' + (entry.title||'Untitled') + '</div>' +
+        '<div class="text-xs text-gray-500">#'+entry.id+' · ' + new Date(entry.created_at).toLocaleString() + '</div>';
       const actions = document.createElement('div');
-      const del = document.createElement('button'); del.className='danger'; del.textContent = 'Delete';
-      del.onclick = async () => { if(!confirm('Delete blog #' + it.id + '?')) return; await api('/api/blogs?id=' + it.id, { method:'DELETE' }); await refreshBlogs(); };
+      actions.className = 'flex items-center gap-2';
+      const view = document.createElement('a');
+      view.href = entry.redirect || '#'; view.target = '_blank';
+      view.className = 'px-2 py-1 text-sm border rounded-md hover:bg-gray-50'; view.textContent = 'Open';
+      const del = document.createElement('button');
+      del.className = 'px-2 py-1 text-sm rounded-md text-white bg-red-500 hover:bg-red-600'; del.textContent = 'Delete';
+      del.onclick = async () => {
+        if(!confirm('Delete '+ type +' #'+ entry.id +'?')) return;
+        await api('/api/'+type+'?id='+entry.id, { method:'DELETE' });
+        if(type==='blogs') await loadBlogs(); else await loadIssues();
+      };
+      actions.appendChild(view);
       if(state.role === 'admin') actions.appendChild(del);
-      li.appendChild(meta); li.appendChild(actions);
-      list.appendChild(li);
+      li.appendChild(left); li.appendChild(actions);
+      return li;
     }
-  }
 
-  async function refreshIssues(){
-    const list = qs('issuesList'); list.innerHTML = '<li class="muted">Loading…</li>';
-    const items = await api('/api/issues');
-    list.innerHTML = '';
-    if(!items.length){ list.innerHTML = '<li class="muted">No issues yet.</li>'; return; }
-    for(const it of items){
-      const li = document.createElement('li'); li.className='item';
-      const meta = document.createElement('div'); meta.className='meta';
-      meta.innerHTML = `<strong>${escapeHtml(it.title||'Untitled')}</strong><span class="muted">#${it.id} · ${new Date(it.created_at).toLocaleString()}</span>`;
-      const actions = document.createElement('div');
-      const del = document.createElement('button'); del.className='danger'; del.textContent = 'Delete';
-      del.onclick = async () => { if(!confirm('Delete issue #' + it.id + '?')) return; await api('/api/issues?id=' + it.id, { method:'DELETE' }); await refreshIssues(); };
-      if(state.role === 'admin') actions.appendChild(del);
-      li.appendChild(meta); li.appendChild(actions);
-      list.appendChild(li);
+    async function loadBlogs(){
+      const list = $('blogsList'); list.innerHTML = '<li class="text-sm text-gray-500">Loading…</li>';
+      const rows = await api('/api/blogs');
+      list.innerHTML = '';
+      if(!rows.length){ list.innerHTML = '<li class="text-sm text-gray-500">No blogs yet.</li>'; return; }
+      rows.forEach(r => list.appendChild(listItem(r,'blogs')));
     }
-  }
 
-  function escapeHtml(s){ return (s||'').replace(/[&<>"]+/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+    async function loadIssues(){
+      const list = $('issuesList'); list.innerHTML = '<li class="text-sm text-gray-500">Loading…</li>';
+      const rows = await api('/api/issues');
+      list.innerHTML = '';
+      if(!rows.length){ list.innerHTML = '<li class="text-sm text-gray-500">No issues yet.</li>'; return; }
+      rows.forEach(r => list.appendChild(listItem(r,'issues')));
+    }
 
-  // Events
-  qs('btnLogin').onclick = async () => {
-    const email = qs('email').value.trim();
-    const password = qs('password').value;
-    qs('loginMsg').textContent = '';
-    if(!email || !password){ qs('loginMsg').textContent = 'Enter email and password'; return; }
-    state.email = email; state.password = password; saveCreds();
-    try { await loadMe(); qs('loginMsg').textContent = ''; } catch(e){ qs('loginMsg').textContent = 'Sign-in failed'; clearCreds(); }
-  };
+    // Auth
+    document.getElementById('authForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      state.email = document.getElementById('email').value.trim();
+      state.password = document.getElementById('password').value;
+      document.getElementById('authMsg').textContent = '';
+      try {
+        if(document.getElementById('remember').checked){ saveCreds(); } else { saveCreds(); }
+        await me();
+      } catch(err){ document.getElementById('authMsg').textContent = 'Invalid credentials'; clearCreds(); }
+    });
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{ clearCreds(); setSignedIn(false); });
 
-  qs('btnLogout').onclick = () => { clearCreds(); setSignedInUI(false); };
+    // Open/close modals
+    function openModal(id){ document.getElementById(id).classList.add('show'); }
+    function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+    document.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-close]');
+      if(btn){ closeModal(btn.getAttribute('data-close')); }
+    });
 
-  qs('btnCreateBlog').onclick = async () => {
-    qs('b_msg').textContent = '';
-    try {
-      const payload = { title: qs('b_title').value, description: qs('b_desc').value, image: qs('b_image').value, redirect: qs('b_redirect').value, buttonText: qs('b_btn').value || 'Read' };
-      await api('/api/blogs', { method:'POST', body: JSON.stringify(payload) });
-      qs('b_msg').textContent = 'Published';
-      qs('b_title').value = qs('b_desc').value = qs('b_image').value = qs('b_redirect').value = '';
-      qs('b_btn').value = 'Read';
-      await refreshBlogs();
-    } catch(e) { qs('b_msg').textContent = 'Failed'; }
-  };
+    document.getElementById('newBlogBtn').onclick = ()=> openModal('blogModal');
+    document.getElementById('newIssueBtn').onclick = ()=> openModal('issueModal');
 
-  qs('btnCreateIssue').onclick = async () => {
-    qs('i_msg').textContent = '';
-    try {
-      const payload = { title: qs('i_title').value, description: qs('i_desc').value, image: qs('i_image').value, redirect: qs('i_redirect').value, buttonText: qs('i_btn').value || 'View' };
-      await api('/api/issues', { method:'POST', body: JSON.stringify(payload) });
-      qs('i_msg').textContent = 'Published';
-      qs('i_title').value = qs('i_desc').value = qs('i_image').value = qs('i_redirect').value = '';
-      qs('i_btn').value = 'View';
-      await refreshIssues();
-    } catch(e) { qs('i_msg').textContent = 'Failed (admin only)'; }
-  };
+    // Create blog
+    document.getElementById('blogForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      document.getElementById('b_msg').textContent = '';
+      try{
+        const payload = { title: document.getElementById('b_title').value, description: document.getElementById('b_desc').value, image: document.getElementById('b_image').value, redirect: document.getElementById('b_redirect').value, buttonText: document.getElementById('b_btn').value || 'Read' };
+        await api('/api/blogs', { method:'POST', body: JSON.stringify(payload) });
+        document.getElementById('b_msg').textContent = 'Published';
+        closeModal('blogModal');
+        await loadBlogs();
+      } catch(err){ document.getElementById('b_msg').textContent = 'Failed to publish'; }
+    });
 
-  qs('btnRefreshBlogs').onclick = refreshBlogs;
-  qs('btnRefreshIssues').onclick = refreshIssues;
+    // Create issue
+    document.getElementById('issueForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      document.getElementById('i_msg').textContent = '';
+      try{
+        const payload = { title: document.getElementById('i_title').value, description: document.getElementById('i_desc').value, image: document.getElementById('i_image').value, redirect: document.getElementById('i_redirect').value, buttonText: document.getElementById('i_btn').value || 'View' };
+        await api('/api/issues', { method:'POST', body: JSON.stringify(payload) });
+        document.getElementById('i_msg').textContent = 'Published';
+        closeModal('issueModal');
+        await loadIssues();
+      } catch(err){ document.getElementById('i_msg').textContent = 'Failed (admin only)'; }
+    });
 
-  // Auto restore session
-  loadCreds();
-  if(state.email && state.password){
-    loadMe().catch(()=>{});
-  }
-})();
-</script>
+    // Initial auto-login if stored
+    loadCreds();
+    if(state.email && state.password){ me().catch(()=>{}); }
+
+    document.getElementById('refreshBlogs').onclick = loadBlogs;
+    document.getElementById('refreshIssues').onclick = loadIssues;
+  })();
+  </script>
 </body>
 </html>
