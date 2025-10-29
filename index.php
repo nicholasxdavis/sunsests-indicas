@@ -36,14 +36,30 @@ switch ($path) {
         header('Location: /admin/index.html');
         exit;
         break;
+    case '/admin/index.html':
+        include __DIR__ . '/admin/index.html';
+        break;
+    case '/init.php':
+        include __DIR__ . '/init.php';
+        break;
     
     default:
         if (strpos($path, '/api') === 0) {
             include __DIR__ . '/api/index.php';
             break;
         }
-        // Check if it's a static file request
-        if (file_exists('main' . $path)) {
+        // Check if it's a static file request (root, main/, or admin/)
+        if (file_exists(__DIR__ . $path) && !is_dir(__DIR__ . $path)) {
+            $filePath = __DIR__ . $path;
+            $mimeType = mime_content_type($filePath);
+            header('Content-Type: ' . $mimeType);
+            readfile($filePath);
+        } elseif (strpos($path, '/admin/') === 0 && file_exists(__DIR__ . $path)) {
+            $filePath = __DIR__ . $path;
+            $mimeType = mime_content_type($filePath);
+            header('Content-Type: ' . $mimeType);
+            readfile($filePath);
+        } elseif (file_exists('main' . $path)) {
             // Serve static files from main directory
             $filePath = 'main' . $path;
             $mimeType = mime_content_type($filePath);
