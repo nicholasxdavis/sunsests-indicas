@@ -36,16 +36,12 @@ switch ($path) {
         header('Location: /admin/index.html');
         exit;
         break;
-        
-    case '/api':
-    case '/api/':
+    
     default:
         if (strpos($path, '/api') === 0) {
             include __DIR__ . '/api/index.php';
             break;
         }
-        
-    default:
         // Check if it's a static file request
         if (file_exists('main' . $path)) {
             // Serve static files from main directory
