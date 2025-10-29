@@ -8,8 +8,8 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
-$dsnHost = getenv('DATABASE') ?: '127.0.0.1';
-$dbName  = getenv('NAME') ?: 'sunsets';
+$dsnHost = getenv('HOST') ?: '127.0.0.1';
+$dbName  = getenv('DATABASE') ?: 'sunsets';
 $dbUser  = getenv('USER') ?: 'user';
 $dbPass  = getenv('USERPASS') ?: '';
 
@@ -69,7 +69,6 @@ function ensureTables(PDO $pdo): void {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
 
-    // user and sponsor profile tables (may already exist if init.php ran)
     $pdo->exec("CREATE TABLE IF NOT EXISTS users (
         id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -272,59 +271,20 @@ if ($path === '/api/sponsor/apply' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// Contact submission (store server-side; can be extended to GitHub via GITHUBKEY)
 if ($path === '/api/contact' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $d = jsonInput();
     $name = trim($d['name'] ?? '');
     $email = trim($d['email'] ?? '');
     $message = trim($d['message'] ?? '');
     if (!$name || !filter_var($email, FILTER_VALIDATE_EMAIL) || !$message) { http_response_code(422); echo json_encode(['error'=>'INVALID_INPUT']); exit; }
-    // Persist locally to newsletter_subscriptions or create a dedicated table if desired.
-    // Minimal persistence: insert into newsletter_subscriptions if email new and ignore otherwise.
     try {
         $pdo->prepare('INSERT IGNORE INTO newsletter_subscriptions (email) VALUES (:email)')->execute([':email'=>$email]);
     } catch (Throwable $e) {}
-    // Optionally, write to GitHub if GITHUBKEY is present (not required for now):
     echo json_encode(['ok'=>true]);
-    exit;
-}
-
-// Admin: create user and optional sponsor profile
-if ($path === '/api/admin/users' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    requireAdmin($pdo);
-    $d = jsonInput();
-    $email = trim($d['email'] ?? '');
-    $password = (string)($d['password'] ?? '');
-    $role = in_array(($d['role'] ?? ''), ['admin','sponsor'], true) ? $d['role'] : 'sponsor';
-    if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 3) {
-        http_response_code(422); echo json_encode(['error'=>'INVALID_INPUT']); exit;
-    }
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, role) VALUES (:email,:hash,:role)');
-    $stmt->execute([':email'=>$email, ':hash'=>$hash, ':role'=>$role]);
-    $userId = (int)$pdo->lastInsertId();
-    if ($role === 'sponsor') {
-        $company = trim($d['companyName'] ?? '');
-        $package = in_array(($d['package'] ?? ''), ['elite','premium','standard'], true) ? $d['package'] : 'standard';
-        $slug = trim($d['slug'] ?? strtolower(preg_replace('/[^a-z0-9]+/','-', $company)));
-        if (!$company || !$slug) { http_response_code(422); echo json_encode(['error'=>'INVALID_SPONSOR']); exit; }
-        $logo = trim($d['logoUrl'] ?? '');
-        $sp = $pdo->prepare('INSERT INTO sponsor_profiles (user_id, company_name, package, slug, logo_url) VALUES (:uid,:company,:package,:slug,:logo)');
-        $sp->execute([':uid'=>$userId, ':company'=>$company, ':package'=>$package, ':slug'=>$slug, ':logo'=>$logo]);
-    }
-    echo json_encode(['ok'=>true, 'id'=>$userId]);
-    exit;
-}
-
-if ($path === '/api/admin/sponsors' && $_SERVER['REQUEST_METHOD'] === 'GET') {
-    requireAdmin($pdo);
-    $stmt = $pdo->query('SELECT u.id as user_id, u.email, s.company_name, s.package, s.slug, s.logo_url, s.status FROM sponsor_profiles s JOIN users u ON u.id = s.user_id ORDER BY s.created_at DESC');
-    echo json_encode($stmt->fetchAll());
     exit;
 }
 
 http_response_code(404);
 echo json_encode(['error' => 'NOT_FOUND']);
-<?php
 
 

@@ -158,10 +158,11 @@
      style="display: none;">
 <script>
   // Run immediately to avoid flicker
-  const ageVerified = localStorage.getItem('ageVerified');
+  let ageVerified = 'false';
+  try { ageVerified = localStorage.getItem('ageVerified') || 'false'; } catch (_) { ageVerified = 'false'; }
   
   function enterSite() {
-    localStorage.setItem('ageVerified', 'true');
+    try { localStorage.setItem('ageVerified', 'true'); } catch (_) {}
     document.getElementById('age-gate').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
   }

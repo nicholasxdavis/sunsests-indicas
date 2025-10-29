@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 header('Content-Type: text/html; charset=UTF-8');
 
-$dsnHost = getenv('DATABASE') ?: '127.0.0.1';
-$dbName  = getenv('NAME') ?: 'sunsets';
+$dsnHost = getenv('HOST') ?: '127.0.0.1';
+$dbName  = getenv('DATABASE') ?: 'sunsets';
 $dbUser  = getenv('USER') ?: 'user';
 $dbPass  = getenv('USERPASS') ?: '';
 

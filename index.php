@@ -59,6 +59,9 @@ switch ($path) {
 
 // Log access for analytics (in production)
 if (!$isDevelopment) {
+    if (!is_dir(__DIR__ . '/logs')) {
+        @mkdir(__DIR__ . '/logs', 0777, true);
+    }
     $logData = [
         'timestamp' => date('Y-m-d H:i:s'),
         'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
@@ -68,7 +71,7 @@ if (!$isDevelopment) {
     ];
     
     // Simple file logging (in production, use proper logging service)
-    error_log(json_encode($logData) . "\n", 3, 'logs/access.log');
+    @error_log(json_encode($logData) . "\n", 3, __DIR__ . '/logs/access.log');
 }
 ?>
 
