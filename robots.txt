@@ -1,0 +1,58 @@
+User-agent: *
+Allow: /
+
+# Allow all search engines to crawl the main content
+Allow: /main/
+Allow: /img/
+Allow: /assets/
+
+# Disallow admin area
+Disallow: /admin/
+
+# Disallow sensitive files
+Disallow: /composer.json
+Disallow: /index.php
+Disallow: /logs/
+Disallow: /*.log
+
+# Allow specific file types
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /*.ico
+Allow: /*.webp
+
+# Sitemap location
+Sitemap: https://sunsetsandindicas.com/sitemap.xml
+
+# Crawl delay (be respectful to server)
+Crawl-delay: 1
+
+# Specific rules for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sponsorship Management | Sunsets & Indicas Admin</title>
+    <link rel="icon" type="image/png" href="../main/img/new-logo.png">
+    <link rel="apple-touch-icon" href="../main/img/new-logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<header class="bg-dark text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center space-x-4">
+                <a href="https://sunsetsandindicas.com/#">
+                    <img src="assets/logo.png" alt="Sunsets & Indicas Logo" class="h-10">
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="index.html" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<body class="bg-gray-50 flex flex-col min-h-screen">
+    <!-- Main Content -->
+    <div class="main-content flex-grow">
+        <div class="max-w-6xl mx-auto px-4 py-12">
+            <!-- Header -->
+            <div class="mb-10">
+                <h1 class="text-4xl font-bold text-dark mb-2">Sponsorship Management</h1>
+                <p class="text-gray-600 max-w-lg">
+                    Manage sponsor applications, approve partnerships, and control sponsored content placement.
+                </p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-envelope text-blue-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Pending Applications</p>
+                            <p class="text-2xl font-bold text-gray-900" id="pending-count">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Active Sponsors</p>
+                            <p class="text-2xl font-bold text-gray-900" id="active-count">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-dollar-sign text-purple-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Monthly Revenue</p>
+                            <p class="text-2xl font-bold text-gray-900" id="revenue">$0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-eye text-orange-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Total Impressions</p>
+                            <p class="text-2xl font-bold text-gray-900" id="impressions">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white rounded-lg shadow-md border border-gray-100 mb-6">
+                <div class="border-b border-gray-200">
+                    <nav class="flex space-x-8 px-6">
+                        <button class="tab-button active py-4 px-1 border-b-2 border-primary font-medium text-sm text-primary" data-tab="applications">
+                            Applications
+                        </button>
+                        <button class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700" data-tab="active">
+                            Active Sponsors
+                        </button>
+                        <button class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700" data-tab="settings">
+                            Settings
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Applications Tab -->
+                <div id="applications-tab" class="tab-content p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Sponsor Applications</h3>
+                        <button class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" onclick="refreshApplications()">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                    
+                    <div id="applications-list" class="space-y-4">
+                        <!-- Applications will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Active Sponsors Tab -->
+                <div id="active-tab" class="tab-content p-6 hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Active Sponsors</h3>
+                        <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" onclick="addNewSponsor()">
+                            <i class="fas fa-plus mr-1"></i> Add Sponsor
+                        </button>
+                    </div>
+                    
+                    <div id="active-sponsors-list" class="space-y-4">
+                        <!-- Active sponsors will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settings-tab" class="tab-content p-6 hidden">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Sponsorship Settings</h3>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 mb-4">Package Pricing</h4>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Premium Package Price</label>
+                                    <input type="number" id="premium-price" value="299" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Standard Package Price</label>
+                                    <input type="number" id="standard-price" value="149" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                                
+                                <button class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                    Update Pricing
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-6 rounded-lg">
+                            <h4 class="font-semibold text-gray-900 mb-4">Content Settings</h4>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="auto-approve" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                    <label for="auto-approve" class="ml-2 block text-sm text-gray-700">Auto-approve applications</label>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="email-notifications" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" checked>
+                                    <label for="email-notifications" class="ml-2 block text-sm text-gray-700">Email notifications for new applications</label>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Max Active Sponsors</label>
+                                    <input type="number" id="max-sponsors" value="6" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                </div>
+                                
+                                <button class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                    Save Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex justify-center md:order-2 space-x-6">
+                    <p class="text-xs text-gray-500">
+                        <span class="block md:inline mt-1 md:mt-0">A Product of Blacnova.</span>
+                    </p>
+                </div>
+                <div class="mt-8 md:mt-0 md:order-1">
+                    <p class="text-center text-xs text-gray-500">
+                        &copy; 2025 Sunsets & Indicas. All rights reserved.
+                        <span class="block md:inline mt-1 md:mt-0">Unauthorized use is unlawful and prohibited.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#a56ab8',
+                        'primary-dark': '#1a1a1a',
+                        secondary: '#f6f9fc',
+                        dark: '#171717',
+                        light: '#ffffff',
+                        gray: {
+                            100: '#f8f9fa',
+                            200: '#e9ecef',
+                            300: '#dee2e6',
+                            400: '#ced4da',
+                            500: '#adb5bd',
+                            600: '#058E3F',
+                            700: '#04773B',
+                            800: '#1f2937',
+                            900: '#171717',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+
+        // Tab functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.dataset.tab;
+                
+                // Update button states
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active', 'border-primary', 'text-primary');
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                });
+                button.classList.add('active', 'border-primary', 'text-primary');
+                button.classList.remove('border-transparent', 'text-gray-500');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById(tabName + '-tab').classList.remove('hidden');
+            });
+        });
+
+        // Mock data for demonstration
+        const mockApplications = [
+            {
+                id: 1,
+                companyName: 'Las Cruces Cannabis Co.',
+                contactName: 'John Smith',
+                email: 'john@lccannabis.com',
+                phone: '(575) 555-0123',
+                businessType: 'dispensary',
+                package: 'premium',
+                message: 'We would like to partner with Sunsets & Indicas to reach more customers in Las Cruces.',
+                applicationDate: '2025-01-27T10:30:00Z',
+                status: 'pending'
+            },
+            {
+                id: 2,
+                companyName: 'Sunset Grow Solutions',
+                contactName: 'Sarah Johnson',
+                email: 'sarah@sunsetgrow.com',
+                phone: '(575) 555-0456',
+                businessType: 'equipment',
+                package: 'standard',
+                message: 'Professional growing equipment and consultation services.',
+                applicationDate: '2025-01-26T14:20:00Z',
+                status: 'pending'
+            }
+        ];
+
+        const mockActiveSponsors = [
+            {
+                id: 1,
+                companyName: 'Cannabis Legal Services',
+                contactName: 'Mike Davis',
+                email: 'mike@cannabislegal.com',
+                package: 'premium',
+                startDate: '2025-01-01',
+                endDate: '2025-12-31',
+                status: 'active'
+            }
+        ];
+
+        // Load applications
+        function loadApplications() {
+            const container = document.getElementById('applications-list');
+            container.innerHTML = '';
+            
+            mockApplications.forEach(app => {
+                const applicationCard = `
+                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-900">${app.companyName}</h4>
+                                <p class="text-sm text-gray-600">${app.contactName} • ${app.email}</p>
+                                <p class="text-sm text-gray-500">${app.businessType} • ${app.package} package</p>
+                            </div>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                                ${app.status}
+                            </span>
+                        </div>
+                        <p class="text-gray-700 mb-4">${app.message}</p>
+                        <div class="flex space-x-2">
+                            <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors" onclick="approveApplication(${app.id})">
+                                Approve
+                            </button>
+                            <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors" onclick="rejectApplication(${app.id})">
+                                Reject
+                            </button>
+                            <button class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors" onclick="viewApplication(${app.id})">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += applicationCard;
+            });
+            
+            document.getElementById('pending-count').textContent = mockApplications.length;
+        }
+
+        // Load active sponsors
+        function loadActiveSponsors() {
+            const container = document.getElementById('active-sponsors-list');
+            container.innerHTML = '';
+            
+            mockActiveSponsors.forEach(sponsor => {
+                const sponsorCard = `
+                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-900">${sponsor.companyName}</h4>
+                                <p class="text-sm text-gray-600">${sponsor.contactName} • ${sponsor.email}</p>
+                                <p class="text-sm text-gray-500">${sponsor.package} package • ${sponsor.startDate} to ${sponsor.endDate}</p>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                                ${sponsor.status}
+                            </span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors" onclick="editSponsor(${sponsor.id})">
+                                Edit
+                            </button>
+                            <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-medium transition-colors" onclick="deactivateSponsor(${sponsor.id})">
+                                Deactivate
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += sponsorCard;
+            });
+            
+            document.getElementById('active-count').textContent = mockActiveSponsors.length;
+        }
+
+        // Action functions
+        function approveApplication(id) {
+            alert(`Application ${id} approved!`);
+            // In real implementation, update the application status
+        }
+
+        function rejectApplication(id) {
+            alert(`Application ${id} rejected.`);
+            // In real implementation, update the application status
+        }
+
+        function viewApplication(id) {
+            alert(`Viewing application ${id} details.`);
+            // In real implementation, show detailed view
+        }
+
+        function editSponsor(id) {
+            alert(`Editing sponsor ${id}.`);
+            // In real implementation, show edit form
+        }
+
+        function deactivateSponsor(id) {
+            alert(`Sponsor ${id} deactivated.`);
+            // In real implementation, update sponsor status
+        }
+
+        function addNewSponsor() {
+            alert('Add new sponsor form would open here.');
+            // In real implementation, show add sponsor form
+        }
+
+        function refreshApplications() {
+            loadApplications();
+            alert('Applications refreshed!');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApplications();
+            loadActiveSponsors();
+        });
+    </script>
+</body>
+</html>

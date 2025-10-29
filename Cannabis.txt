@@ -1,0 +1,32 @@
+We r going to use Laravel HTML5 hybrid, We will use jQuery, Alpine where is needed.
+Phase 0A
+- Rename Everything from Culiv8 Culture to Sunsets & Indicas
+- Replace green color with #eb7018 and #718729 as secondary
+- Master SEO on EVERY page make it all complete and ready master it we are in las cruces New Mexico.
+- Replace Old logo (one being used right now ) with New logo (img/new-logo.png)
+Phase 0B
+- Make composer and php file (make the php file just redirect/load into main/index.html)
+- Make sitemap, robots, 404, etc.
+Phase 0C
+- Connect to db, keep GitHub for IMG storing.
+- Connect admin/main together break GitHub connection only keep GitHub connection for Storing Images.^
+Phase 1A
+- Add Sponsored Section
+- Add Sponsor Application
+- Add Sponsor Benefits/Pricing etc  - Shown on Application 
+- Add Sponsorship control in admin app (A place we can switch out sponsors, logos etc)
+Phase 1B 
+- Remove Sub button hero and Pricing Section we will not charge for this after-all. remove Sub nav link in footer
+-  Make Legal legal.html (Privacy Policy
+& Terms of Service, Cookies and 21+ New Mexico Laws Etc)
+
+
+
+
+
+
+
+
+
+
+

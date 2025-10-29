@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cards MMS - Content Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4ade80',
+                        'primary-dark': '#22c55e',
+                        secondary: '#f6f9fc',
+                        dark: '#171717',
+                        light: '#ffffff',
+                        gray: {
+                            100: '#f8f9fa',
+                            200: '#e9ecef',
+                            300: '#dee2e6',
+                            400: '#ced4da',
+                            500: '#adb5bd',
+                            600: '#058E3F',
+                            700: '#04773B',
+                            800: '#1f2937',
+                            900: '#171717',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 2px 4px rgba(0,0,0,.04), 0 8px 16px rgba(0,0,0,.08)',
+                        'button': '0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08)',
+                        'button-hover': '0 7px 14px rgba(50,50,93,.1), 0 3px 6px rgba(0,0,0,.08)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .menu-upload-section {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,.04), 0 8px 16px rgba(0,0,0,.08);
+            position: relative;
+        }
+        
+        .menu-preview-container {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 100px;
+            height: 100px;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .menu-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s ease;
+        }
+        
+        .menu-preview-container:hover .menu-preview {
+            opacity: 0.8;
+        }
+        
+        .menu-preview-container::before {
+            content: '\f06e';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #4ade80;
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .menu-preview-container:hover::before {
+            opacity: 1;
+        }
+        
+        .menu-upload-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            padding-right: 110px;
+        }
+        
+        .menu-upload-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+            margin: 0;
+        }
+        
+        .menu-upload-description {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+            padding-right: 110px;
+        }
+        
+        .url-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-right: 110px;
+        }
+        
+        .url-input {
+            font-size: 0.75rem;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.5rem;
+            background-color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            min-width: 0;
+            margin-top: 0.5rem;
+        }
+        
+        .url-input:focus {
+            outline: none;
+            border-color: #4ade80;
+            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+        }
+        
+        .copy-btn {
+            padding: 0.375rem 0.75rem;
+            background-color: #f3f4f6;
+            border-radius: 0.375rem;
+            color: #374151;
+            font-size: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+            margin-top: 0.5rem;
+        }
+        
+        .copy-btn:hover {
+            background-color: #e5e7eb;
+        }
+        
+        .copy-btn i {
+            margin-right: 0.25rem;
+        }
+        
+        #toast {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background-color: #171717;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .add-menu-btn-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+        
+        .add-menu-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: #4ade80;
+            color: white;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .add-menu-btn:hover {
+            background-color: #22c55e;
+        }
+        
+        .remove-menu-btn {
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .remove-menu-btn:hover {
+            text-decoration: underline;
+        }
+        
+        /* Unified Modal Styles */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .custom-modal-content {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .custom-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .custom-modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .custom-modal-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .custom-modal-body {
+            margin-bottom: 1.5rem;
+        }
+        
+        .custom-modal-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        
+        .custom-modal-input:focus {
+            outline: none;
+            border-color: #4ade80;
+            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+        }
+        
+        .custom-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+        
+        .custom-modal-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .custom-modal-btn-primary {
+            background-color: #4ade80;
+            color: white;
+            border: none;
+        }
+        
+        .custom-modal-btn-primary:hover {
+            background-color: #22c55e;
+        }
+        
+        .custom-modal-btn-secondary {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: none;
+        }
+        
+        .custom-modal-btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+        
+        /* Image Preview Modal */
+        .img-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .img-preview-container {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .img-preview-content {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 0.5rem;
+        }
+        
+        .img-preview-close {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #4ade80;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 1200;
+        }
+        
+        .img-preview-close:hover {
+            color: #22c55e;
+        }
+        
+        /* Consistent button height */
+        .upload-btn {
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Image management styles */
+        .image-upload-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .image-upload-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .image-upload-card h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .image-preview-container {
+            width: 100%;
+            height: 120px;
+            border-radius: 0.375rem;
+            border: 1px dashed #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .image-placeholder {
+            color: #9ca3af;
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .image-upload-btn {
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            background-color: #f3f4f6;
+            border-radius: 0.375rem;
+            color: #374151;
+            font-size: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        .image-upload-btn:hover {
+            background-color: #e5e7eb;
+        }
+
+        .image-upload-btn i {
+            font-size: 0.875rem;
+        }
+
+        .hidden-file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Modern Header -->
+        <header class="bg-dark text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-4">
+                        <a href="https://nicholasxdavis.github.io/cards-mms/#">
+                            <img src="assets/logo.png" alt="Cards Logo" class="h-10">
+                        </a>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="submit-ticket-btn" class="bg-primary hover:bg-primary-dark px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-ticket-alt mr-1"></i> Submit Ticket
+                        </button>
+                        <a href="index.html" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                            Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="fixed top-[120px] left-0 z-50 overflow-hidden">
+            <button
+                onclick="window.history.back()"
+                class="group ml-[-4px] h-[48px] pl-2 pr-4 py-3 bg-green-500 text-white border-l-0 rounded-r-lg shadow-md transform transition-all duration-200 ease-out hover:ml-0 hover:shadow-lg hover:bg-green-600 focus:outline-none flex items-center font-medium border border-green-600 border-l-0 whitespace-nowrap"
+                aria-label="Previous Page"
+            >
+                <div class="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span class="max-w-0 overflow-hidden transition-all duration-200 group-hover:max-w-[120px] group-hover:ml-2">
+                        Previous Page
+                    </span>
+                </div>
+            </button>
+        </div>
+        <div class="max-w-4xl mx-auto px-4 py-12 flex-grow">
+            <!-- Upload Section Header -->
+            <div class="mb-10 text-center">
+                <h1 class="text-4xl font-bold text-dark mb-2">Content Management</h1>
+                <p class="text-gray-600 max-w-lg mx-auto">
+                    Upload and manage your restaurant images. Each image type will overwrite the previous version.
+                </p>
+            </div>
+
+            <!-- Image Upload Section -->
+            <div class="menu-upload-section">
+                <div class="menu-upload-header">
+                    <h2 class="menu-upload-title">Cover Images</h2>
+                </div>
+                <p class="menu-upload-description">Upload images for different cover positions (JPG only)</p>
+                <p class="menu-upload-description">Recommened Image Size: 729p x 1000p</p>
+
+                
+                <div class="image-upload-grid">
+                    <!-- Center Cover -->
+                    <div class="image-upload-card">
+                        <h3>Center Cover</h3>
+                        <div class="image-preview-container" id="center-cover-preview-container">
+                            <div class="image-placeholder" id="center-cover-placeholder">No image selected</div>
+                            <img src="" alt="Center Cover Preview" class="image-preview hidden" id="center-cover-preview">
+                        </div>
+                        <button class="image-upload-btn" id="center-cover-upload-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload Image
+                        </button>
+                        <input type="file" id="center-cover-input" class="hidden-file-input" accept="image/jpeg,image/png">
+                    </div>
+                    
+                    <!-- Left Cover -->
+                    <div class="image-upload-card">
+                        <h3>Left Cover</h3>
+                        <div class="image-preview-container" id="left-cover-preview-container">
+                            <div class="image-placeholder" id="left-cover-placeholder">No image selected</div>
+                            <img src="" alt="Left Cover Preview" class="image-preview hidden" id="left-cover-preview">
+                        </div>
+                        <button class="image-upload-btn" id="left-cover-upload-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload Image
+                        </button>
+                        <input type="file" id="left-cover-input" class="hidden-file-input" accept="image/jpeg,image/png">
+                    </div>
+                    
+                    <!-- Right Cover -->
+                    <div class="image-upload-card">
+                        <h3>Right Cover</h3>
+                        <div class="image-preview-container" id="right-cover-preview-container">
+                            <div class="image-placeholder" id="right-cover-placeholder">No image selected</div>
+                            <img src="" alt="Right Cover Preview" class="image-preview hidden" id="right-cover-preview">
+                        </div>
+                        <button class="image-upload-btn" id="right-cover-upload-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload Image
+                        </button>
+                        <input type="file" id="right-cover-input" class="hidden-file-input" accept="image/jpeg,image/png">
+                    </div>
+                </div>
+                
+                <!-- URL Container -->
+                <div id="image-url-container" class="url-container hidden">
+                    <input type="text" id="image-url" class="url-input" value="" readonly>
+                    <button class="copy-btn" data-target="image-url">
+                        <i class="far fa-copy"></i> Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- View More Section -->
+            <div class="bg-white rounded-xl shadow-card border border-gray-100 p-6 mb-8 text-center">
+                <h3 class="text-lg font-medium text-dark mb-2">Need Help?</h3>
+                <p class="text-gray-600 mb-4">Contact support if you have any questions about image management</p>
+                <button id="submit-ticket-btn-bottom" class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg shadow-button hover:shadow-button-hover transition-all">
+                    <i class="fas fa-ticket-alt mr-2"></i> Submit Ticket
+                </button>
+            </div>
+        </div>
+
+        <!-- Image Preview Modal -->
+        <div id="img-preview-modal" class="img-preview-modal">
+            <button id="img-preview-close" class="img-preview-close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="img-preview-container">
+                <img id="img-preview-content" class="img-preview-content" src="" alt="Image Preview">
+            </div>
+        </div>
+
+        <!-- Submit Ticket Modal -->
+        <div id="ticket-modal" class="custom-modal">
+            <div class="custom-modal-content">
+                <div class="custom-modal-header">
+                    <h3 class="custom-modal-title">Submit a Ticket</h3>
+                    <button id="close-ticket-modal" class="custom-modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="ticket-form" class="custom-modal-body space-y-4">
+                    <div>
+                        <label for="ticket-subject" class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                        <input type="text" id="ticket-subject" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+                    <div>
+                        <label for="ticket-message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                        <textarea id="ticket-message" rows="4" required
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+                    </div>
+                </form>
+                <div class="custom-modal-footer">
+                    <button id="ticket-modal-cancel" class="custom-modal-btn custom-modal-btn-secondary">
+                        Cancel
+                    </button>
+                    <button type="submit" form="ticket-form" class="custom-modal-btn custom-modal-btn-primary">
+                        Submit Ticket
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast">
+            <i class="fas fa-check-circle mr-2 text-green-400"></i>
+            <span id="toast-msg"></span>
+        </div>
+
+        <!-- Modern Footer -->
+        <footer class="bg-white border-t border-gray-200 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="md:flex md:items-center md:justify-between">
+                    <div class="flex justify-center md:order-2 space-x-6">
+                        <p class="text-xs text-gray-500">
+                            <span class="block md:inline mt-1 md:mt-0">A Product of Blacnova.</span>
+                        </p>
+                    </div>
+                    <div class="mt-8 md:mt-0 md:order-1">
+                        <p class="text-center text-xs text-gray-500">
+                            &copy; 2025 Cards MMS. All rights reserved.
+                            <span class="block md:inline mt-1 md:mt-0">Unauthorized use is unlawful and prohibited.</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Password Protection and other scripts remain the same -->
+    <style> 
+    /* Password Protection */
+    .password-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(23, 23, 23, 0.96);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+        overflow: hidden; /* Prevent scrolling */
+    }
+
+    body.password-protected {
+        overflow: hidden; /* Disable scrolling on body */
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+
+    .password-box {
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        transform: translateY(-20px);
+        opacity: 0;
+        animation: slideUp 0.4s ease-out forwards;
+    }
+
+    @keyframes slideUp {
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .remember-me {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .remember-me input {
+        margin-right: 0.5rem;
+    }
+    </style>
+
+    <!-- Password Protection -->
+    <div id="password-protection" class="password-container">
+        <div class="password-box">
+            <div class="text-center mb-6">
+                <div class="flex justify-center mb-4">
+                    <a href="https://nicholasxdavis.github.io/cards-mms/#">
+                        <img src="assets/logo_black.png" alt="Cards Logo" class="h-14">
+                    </a>
+                </div>
+                <h2 class="text-2xl font-bold text-dark mb-1">Content Management</h2>
+                <p class="text-gray-600">Enter credentials to continue</p>
+            </div>
+            
+            <form id="password-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+                
+                <div class="remember-me">
+                    <input type="checkbox" id="remember-me" name="remember-me">
+                    <label for="remember-me" class="text-sm text-gray-700">Remember me</label>
+                </div>
+                
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Continue
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center text-xs text-gray-500">
+                Unauthorized use is unlawful and prohibited
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Configuration
+    const CONFIG = {
+        REPO: "nicholasxdavis/cards-img",
+        FOLDER: "covers/",
+        MAX_SIZE: 5 * 1024 * 1024, // 5MB
+        TOKEN: "" // Will be populated after fetch
+    };
+
+    // Image types
+    const IMAGE_TYPES = [
+        { id: 'center-cover', name: 'Center Cover' },
+        { id: 'left-cover', name: 'Left Cover' },
+        { id: 'right-cover', name: 'Right Cover' }
+    ];
+
+    // Function to fetch and process token
+    async function fetchAndProcessToken() {
+        try {
+            const response = await fetch('https://nicholasxdavis.github.io/cards-img/assets/auth.txt');
+            if (!response.ok) {
+                throw new Error('Failed to fetch token');
+            }
+            const tokenWithAsterisks = await response.text();
+            // Remove all asterisks from the token
+            CONFIG.TOKEN = tokenWithAsterisks.replace(/\*/g, '');
+        } catch (error) {
+            console.error('Error fetching token:', error);
+            showToast('Error loading authentication token', 'error');
+        }
+    }
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Fetch token
+        await fetchAndProcessToken();
+        
+        // Setup image upload functionality
+        setupImageUploads();
+        
+        // Load existing images
+        loadExistingImages();
+        
+        // Setup ticket modal
+        setupTicketModal();
+        
+        // Setup image preview modal
+        setupImagePreviewModal();
+        
+        // Setup copy buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.copy-btn')) {
+                const btn = e.target.closest('.copy-btn');
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                
+                if (input) {
+                    input.select();
+                    document.execCommand('copy');
+                    showToast('Link copied to clipboard');
+                    
+                    // Visual feedback
+                    const icon = btn.querySelector('i');
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    btn.disabled = true;
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                    }, 2000);
+                }
+            }
+        });
+    });
+
+    // Setup image upload functionality
+    function setupImageUploads() {
+        IMAGE_TYPES.forEach(imageType => {
+            const input = document.getElementById(`${imageType.id}-input`);
+            const uploadBtn = document.getElementById(`${imageType.id}-upload-btn`);
+            const previewContainer = document.getElementById(`${imageType.id}-preview-container`);
+            const preview = document.getElementById(`${imageType.id}-preview`);
+            const placeholder = document.getElementById(`${imageType.id}-placeholder`);
+            
+            uploadBtn.addEventListener('click', () => input.click());
+            
+            input.addEventListener('change', async () => {
+                const file = input.files[0];
+                if (!file) return;
+                
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/png'];
+                if (!validTypes.includes(file.type)) {
+                    showToast('Invalid file type (only JPG or PNG)', 'error');
+                    return;
+                }
+                
+                // Validate file size
+                if (file.size > CONFIG.MAX_SIZE) {
+                    showToast('File too large (max 5MB)', 'error');
+                    return;
+                }
+                
+                try {
+                    // Show preview
+                    preview.src = URL.createObjectURL(file);
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    
+                    // Get the SHA of the existing file (if any) so we can update it
+                    let sha = null;
+                    try {
+                        const existingFile = await getFileInfo(`${CONFIG.FOLDER}${imageType.id}.jpg`);
+                        sha = existingFile.sha;
+                    } catch (error) {
+                        // File doesn't exist yet, that's fine
+                    }
+                    
+                    // Upload the image file
+                    const url = await uploadImage(file, `${imageType.id}.jpg`, sha);
+                    
+                    // Show success
+                    showToast(`${imageType.name} updated successfully`);
+                    
+                    // Save URL to localStorage
+                    localStorage.setItem(`${imageType.id}-url`, url);
+                    
+                    // Update the URL container
+                    updateUrlContainer();
+                    
+                } catch (error) {
+                    console.error(error);
+                    showToast(`Failed to upload ${imageType.name}`, 'error');
+                    
+                    // Reset preview on error
+                    preview.src = '';
+                    preview.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
+                }
+            });
+            
+            // Make preview clickable to view larger version
+            previewContainer.addEventListener('click', (e) => {
+                if (preview.src && !e.target.classList.contains('image-placeholder')) {
+                    const previewModal = document.getElementById('img-preview-modal');
+                    const previewContent = document.getElementById('img-preview-content');
+                    previewContent.src = preview.src;
+                    previewModal.style.display = 'flex';
+                }
+            });
+        });
+    }
+
+    // Function to get file info (SHA)
+    async function getFileInfo(path) {
+        const response = await fetch(
+            `https://api.github.com/repos/${CONFIG.REPO}/contents/${path}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${CONFIG.TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+        
+        if (!response.ok) {
+            throw new Error('File not found');
+        }
+        
+        return await response.json();
+    }
+
+    // Function to upload an image (will overwrite existing)
+    async function uploadImage(file, filename, sha = null) {
+        const path = `${CONFIG.FOLDER}${filename}`;
+        const content = await readAsBase64(file);
+        
+        const response = await fetch(
+            `https://api.github.com/repos/${CONFIG.REPO}/contents/${path}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${CONFIG.TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    message: `Update ${filename}`,
+                    content: content.split(',')[1],
+                    sha: sha // Include SHA if we're updating an existing file
+                })
+            }
+        );
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Upload failed');
+        }
+
+        const data = await response.json();
+        return data.content.download_url
+            .replace('/github.com/', '/raw.githubusercontent.com/')
+            .replace('/master/', '/main/');
+    }
+
+    // Helper function to read file as base64
+    function readAsBase64(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Load existing images from GitHub
+    async function loadExistingImages() {
+        try {
+            for (const imageType of IMAGE_TYPES) {
+                try {
+                    const fileInfo = await getFileInfo(`${CONFIG.FOLDER}${imageType.id}.jpg`);
+                    const url = fileInfo.download_url
+                        .replace('/github.com/', '/raw.githubusercontent.com/')
+                        .replace('/master/', '/main/');
+                    
+                    // Update the UI
+                    const preview = document.getElementById(`${imageType.id}-preview`);
+                    const placeholder = document.getElementById(`${imageType.id}-placeholder`);
+                    
+                    if (preview && placeholder) {
+                        preview.src = url;
+                        preview.classList.remove('hidden');
+                        placeholder.classList.add('hidden');
+                        
+                        // Save to localStorage
+                        localStorage.setItem(`${imageType.id}-url`, url);
+                    }
+                } catch (error) {
+                    // File doesn't exist, that's fine
+                }
+            }
+            
+            // Update URL container
+            updateUrlContainer();
+        } catch (error) {
+            console.error('Error loading existing images:', error);
+        }
+    }
+
+    // Update URL container based on which images exist
+    function updateUrlContainer() {
+        const urlContainer = document.getElementById('image-url-container');
+        const urlInput = document.getElementById('image-url');
+        
+        // Check if any images exist
+        const hasImages = IMAGE_TYPES.some(type => localStorage.getItem(`${type.id}-url`));
+        
+        if (hasImages) {
+            // Show the first available URL (they all point to the same location)
+            const firstImageType = IMAGE_TYPES.find(type => localStorage.getItem(`${type.id}-url`));
+            if (firstImageType) {
+                urlInput.value = localStorage.getItem(`${firstImageType.id}-url`);
+                urlContainer.classList.remove('hidden');
+            }
+        } else {
+            urlContainer.classList.add('hidden');
+        }
+    }
+
+    // Setup image preview modal
+    function setupImagePreviewModal() {
+        const modal = document.getElementById('img-preview-modal');
+        const closeBtn = document.getElementById('img-preview-close');
+        
+        // Close modal when clicking close button
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside image
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    // Setup ticket modal
+    function setupTicketModal() {
+        const ticketModal = document.getElementById('ticket-modal');
+        const submitTicketBtn = document.getElementById('submit-ticket-btn');
+        const submitTicketBtnBottom = document.getElementById('submit-ticket-btn-bottom');
+        const closeBtn = document.getElementById('close-ticket-modal');
+        const cancelBtn = document.getElementById('ticket-modal-cancel');
+        const ticketForm = document.getElementById('ticket-form');
+
+        // Open modal from header button
+        submitTicketBtn.addEventListener('click', () => {
+            ticketModal.style.display = 'flex';
+        });
+
+        // Open modal from bottom button
+        submitTicketBtnBottom.addEventListener('click', () => {
+            ticketModal.style.display = 'flex';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            ticketModal.style.display = 'none';
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            ticketModal.style.display = 'none';
+        });
+
+        ticketForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            showToast('Ticket submitted successfully');
+            ticketModal.style.display = 'none';
+            ticketForm.reset();
+        });
+    }
+
+    // Function to show toast message
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+        const icon = toast.querySelector('i');
+        
+        toastMsg.textContent = message;
+        
+        if (type === 'error') {
+            icon.className = 'fas fa-exclamation-circle mr-2 text-red-400';
+        } else {
+            icon.className = 'fas fa-check-circle mr-2 text-green-400';
+        }
+        
+        toast.style.display = 'flex';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    // Password protection and other security scripts remain the same
+    (function() {
+        // Enhanced Password Protection with DOM Tampering Protection
+        const passwordProtection = document.getElementById('password-protection');
+        const mainContent = document.getElementById('main-content');
+
+        // Check if user has recently logged in or has "Remember me" enabled
+        const checkAccess = () => {
+            // If "Remember me" is enabled
+            if (localStorage.getItem('remembered') === 'true') {
+                return true;
+            }
+            
+            // Check 24-hour session
+            const lastLogin = localStorage.getItem('lastLogin');
+            if (lastLogin) {
+                const now = new Date().getTime();
+                const twentyFourHours = 24 * 60 * 60 * 1000;
+                return (now - parseInt(lastLogin)) < twentyFourHours;
+            }
+            
+            return false;
+        };
+
+        // If user has access, hide the password protection immediately
+        if (checkAccess()) {
+            passwordProtection.style.display = 'none';
+            if (mainContent) mainContent.classList.remove('hidden');
+            document.body.classList.remove('password-protected');
+            return; // Skip the rest of the security checks since user is authenticated
+        }
+
+        // Self-check on load
+        if (!passwordProtection) {
+            document.body.innerHTML = `
+                <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#171717; color:white; font-family:sans-serif; text-align:center; padding:20px;">
+                    <div>
+                        <h1 style="color:#ef4444; margin-bottom:20px;">Security System Activated</h1>
+                        <p>Unauthorized use is unlawful and prohibited</p>
+                    </div>
+                </div>
+            `;
+            document.body.style.overflow = 'hidden';
+            throw new Error("Security system activated");
+        }
+
+        // Mutation Observer to detect DOM tampering
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (!document.body.contains(passwordProtection)) {
+                    // If password protection element was removed, nuke the page
+                    document.body.innerHTML = `
+                        <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#171717; color:white; font-family:sans-serif; text-align:center; padding:20px;">
+                            <div>
+                                <h1 style="color:#ef4444; margin-bottom:20px;">Security Violation Detected</h1>
+                                <p>Unauthorized access attempt logged.</p>
+                                <p style="margin-top:20px; color:#9ca3af;">Unauthorized use is unlawful and prohibited</p>
+                                <p style="margin-top:10px; color:#9ca3af;">All content has been removed for security reasons.</p>
+                            </div>
+                        </div>
+                    `;
+                    document.body.style.overflow = 'hidden';
+                    observer.disconnect();
+                    throw new Error("Security violation detected");
+                }
+            });
+        });
+
+        // Start observing the document
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: false,
+            characterData: false
+        });
+
+        // Disable right-click
+        document.addEventListener('contextmenu', function(e) {
+            if (!e.target.matches('input, textarea')) {
+                e.preventDefault();
+                showToast('Right-click disabled for security', 'error');
+            }
+        });
+
+        // Prevent dev tools but allow typing in inputs
+        document.addEventListener('keydown', function(e) {
+            const isInput = e.target.matches('input, textarea, [contenteditable]');
+            
+            // Allow normal typing in inputs
+            if (isInput) {
+                return true;
+            }
+            
+            // Block dev tools shortcuts
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+                (e.metaKey && e.altKey && e.key === 'I')) {
+                e.preventDefault();
+                showToast('Developer tools are disabled', 'error');
+            }
+        });
+
+        // Disable scrolling and interaction (except for form inputs)
+        document.body.classList.add('password-protected');
+        const preventDefaultScroll = function(e) {
+            if (passwordProtection.style.display !== 'none' && !e.target.matches('input, textarea, select, button')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        };
+
+        const scrollEvents = ['wheel', 'touchmove', 'scroll'];
+        scrollEvents.forEach(function(event) {
+            document.addEventListener(event, preventDefaultScroll, {passive: false});
+        });
+
+        // Check if user is remembered (pre-fill form)
+        if (localStorage.getItem('remembered') === 'true') {
+            document.getElementById('email').value = localStorage.getItem('rememberedEmail') || '';
+            document.getElementById('password').value = localStorage.getItem('rememberedPassword') || '';
+            document.getElementById('remember-me').checked = true;
+        }
+
+        // Login form submission
+        document.getElementById('password-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+
+            const validUsers = {
+                'chef@farmesilla.com': 'FARM1840!',
+                'nic@blacnova.net': '2900',
+                'justin@farmesilla.com': 'FARM1840'
+            };
+
+            if (validUsers[email] && validUsers[email] === password) {
+                // Set last login time (current timestamp)
+                localStorage.setItem('lastLogin', new Date().getTime().toString());
+
+                // Remember user if checkbox is checked
+                if (rememberMe) {
+                    localStorage.setItem('remembered', 'true');
+                    localStorage.setItem('rememberedEmail', email);
+                    localStorage.setItem('rememberedPassword', password);
+                } else {
+                    localStorage.removeItem('remembered');
+                    localStorage.removeItem('rememberedEmail');
+                    localStorage.removeItem('rememberedPassword');
+                }
+                
+                // Correct credentials - grant access
+                passwordProtection.style.opacity = '0';
+                setTimeout(() => {
+                    passwordProtection.style.display = 'none';
+                    if (mainContent) mainContent.classList.remove('hidden');
+                    document.body.classList.remove('password-protected');
+                    
+                    // Remove scroll prevention
+                    scrollEvents.forEach(function(event) {
+                        document.removeEventListener(event, preventDefaultScroll, {passive: false});
+                    });
+                    
+                    // Disconnect the observer after successful auth
+                    observer.disconnect();
+                }, 300);
+            } else {
+                showToast('Incorrect email or password. Please try again.', 'error');
+            }
+        });
+
+        // Periodically check if password protection element still exists
+        setInterval(() => {
+            if (!document.getElementById('password-protection') && passwordProtection.style.display !== 'none') {
+                document.body.innerHTML = `
+                    <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#171717; color:white; font-family:sans-serif; text-align:center; padding:20px;">
+                        <div>
+                            <h1 style="color:#ef4444; margin-bottom:20px;">Security Breach Detected</h1>
+                            <p>Unauthorized use is unlawful and prohibited</p>
+                            <p style="margin-top:20px; color:#9ca3af;">Page content has been locked due to security violations.</p>
+                        </div>
+                    </div>
+                `;
+                document.body.style.overflow = 'hidden';
+                observer.disconnect();
+                throw new Error("Security breach detected");
+            }
+        }, 1000);
+    })();
+    </script>
+</body>
+</html>

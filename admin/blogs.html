@@ -1,0 +1,2181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cultiv8 - Blog Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4ade80',
+                        'primary-dark': '#22c55e',
+                        secondary: '#f6f9fc',
+                        dark: '#171717',
+                        light: '#ffffff',
+                        gray: {
+                            100: '#f8f9fa',
+                            200: '#e9ecef',
+                            300: '#dee2e6',
+                            400: '#ced4da',
+                            500: '#adb5bd',
+                            600: '#058E3F',
+                            700: '#04773B',
+                            800: '#1f2937',
+                            900: '#171717',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 2px 4px rgba(0,0,0,.04), 0 8px 16px rgba(0,0,0,.08)',
+                        'button': '0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08)',
+                        'button-hover': '0 7px 14px rgba(50,50,93,.1), 0 3px 6px rgba(0,0,0,.08)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .drag-over {
+            background-color: rgba(74, 222, 128, 0.08);
+            border-color: #4ade80 !important;
+        }
+        
+        #toast {
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .password-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(23, 23, 23, 0.96);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .password-box {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: translateY(-20px);
+            opacity: 0;
+            animation: slideUp 0.4s ease-out forwards;
+        }
+        
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .remember-me input {
+            margin-right: 0.5rem;
+        }
+
+        .upload-item {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .upload-item:last-child {
+            border-bottom: none;
+        }
+
+        .upload-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+
+        .upload-details {
+            min-width: 0;
+        }
+
+        .filename {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #111827;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.5rem;
+            max-width: 100%;
+        }
+
+        .url-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .url-input {
+            font-size: 0.75rem;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.5rem;
+            background-color: white;
+                            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .copy-btn {
+            padding: 0.375rem 0.75rem;
+            background-color: #f3f4f6;
+            border-radius: 0.375rem;
+            color: #374151;
+            font-size: 0.75rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background-color: '#e5e7eb';
+        }
+
+        .copy-btn i {
+            margin-right: 0.25rem;
+        }
+
+        /* Blog card styles */
+        .blog-card {
+            transition: all 0.3s ease;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* Edit modal styles */
+        .edit-modal-content {
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .preview-image {
+            max-height: 200px;
+            object-fit: contain;
+        }
+
+        /* Upload area styles */
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #f9fafb;
+        }
+
+        .upload-area:hover {
+            border-color: '#9ca3af';
+            background-color: '#f3f4f6';
+        }
+
+        .upload-area.drag-over {
+            border-color: '#4ade80';
+            background-color: 'rgba(74, 222, 128, 0.05)';
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: '#9ca3af';
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            color: '#6b7280';
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.875rem;
+            color: '#9ca3af';
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Password Protection -->
+    <div id="password-protection" class="password-container">
+        <div class="password-box">
+            <div class="text-center mb-6">
+               <div class="flex justify-center mb-4">
+  <a href="https://nicholasxdavis.github.io/cultiv8/#">
+    <img src="assets/logo_black.png" alt="Cultiv8 Logo" class="h-14">
+  </a>
+</div>
+
+                <h2 class="text-2xl font-bold text-dark mb-1">Cultiv8 Dashboard</h2>
+                <p class="text-gray-600">Enter credentials to continue</p>
+            </div>
+            
+            <form id="password-form" class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+                
+                <div class="remember-me">
+                    <input type="checkbox" id="remember-me" name="remember-me">
+                    <label for="remember-me" class="text-sm text-gray-700">Remember me</label>
+                </div>
+                
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Continue
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center text-xs text-gray-500">
+                Unauthorized use is unlawful and prohibited
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden until authenticated) -->
+    <div id="main-content" class="hidden main-content">
+        <!-- Modern Header -->
+        <header class="bg-dark text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-4">
+                        <a href="https://nicholasxdavis.github.io/cultiv8/#">
+                            <img src="assets/logo.png" alt="Cultiv8 Logo" class="h-10">
+                        </a>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="submit-ticket-btn" class="bg-primary hover:bg-primary-dark px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                            <i class="fas fa-ticket-alt mr-1"></i> Submit Ticket
+                        </button>
+                        <a href="index.html" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                            Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="fixed top-[120px] left-0 z-50 overflow-hidden">
+          <button
+            onclick="window.history.back()"
+            class="group ml-[-4px] h-[48px] pl-2 pr-4 py-3 bg-green-500 text-white border-l-0 rounded-r-lg shadow-md transform transition-all duration-200 ease-out hover:ml-0 hover:shadow-lg hover:bg-green-600 focus:outline-none flex items-center font-medium border border-green-600 border-l-0 whitespace-nowrap"
+            aria-label="Previous Page"
+          >
+            <div class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span class="max-w-0 overflow-hidden transition-all duration-200 group-hover:max-w-[120px] group-hover:ml-2">
+                Previous Page
+              </span>
+            </div>
+          </button>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 py-8 flex-grow">
+            <!-- Blog Management Header -->
+            <div class="mb-8 text-center">
+                <h1 class="text-4xl font-bold text-dark mb-2">Blog Management</h1>
+                <p class="text-gray-600 max-w-lg mx-auto">
+                    Manage and edit all blog cards displayed on the Cultiv8 website.
+                </p>
+            </div>
+
+            <!-- Add New Blog Card Button -->
+            <div class="flex justify-end mb-6">
+                <button id="add-blog-btn" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg shadow-button hover:shadow-button-hover transition-all flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Add New Blog
+                </button>
+            </div>
+
+            <!-- Blog Cards Container -->
+            <div id="blog-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Blog cards will be loaded here -->
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-2"></div>
+                <p class="text-gray-600">Loading blog cards...</p>
+            </div>
+        </div>
+
+    <!-- Create Blog Modal -->
+<div id="create-blog-modal" class="modal">
+    <div class="modal-content edit-modal-content">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-dark">Create New Blog</h3>
+            <button id="close-create-modal" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="create-blog-form" class="space-y-4">
+            <!-- Image Upload Section -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
+                <div id="upload-area" class="upload-area">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <p class="upload-text">Drag & drop your image here or click to browse</p>
+                    <p class="upload-hint">Recommended size: 1200x630px (JPG, PNG, GIF)</p>
+                    <input type="file" id="image-upload" accept="image/*" class="hidden">
+                </div>
+                <div id="upload-preview" class="hidden mt-4">
+                    <div class="flex items-center space-x-4">
+                        <img id="uploaded-image-preview" src="" alt="Preview" class="h-20 w-20 object-cover rounded">
+                        <div>
+                            <p id="upload-filename" class="text-sm font-medium text-gray-900 truncate"></p>
+                            <p id="upload-size" class="text-xs text-gray-500"></p>
+                            <button type="button" id="change-image-btn" class="mt-1 text-xs text-primary hover:text-primary-dark">
+                                Change Image
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blog Details -->
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label for="blog-title" class="block text-sm font-medium text-gray-700 mb-1">Title*</label>
+                    <input type="text" id="blog-title" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+                
+                <div>
+                    <label for="blog-description" class="block text-sm font-medium text-gray-700 mb-1">Description*</label>
+                    <textarea id="blog-description" rows="3" required
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+                </div>
+                
+                <div>
+                    <label for="blog-button-text" class="block text-sm font-medium text-gray-700 mb-1">Button Text*</label>
+                    <input type="text" id="blog-button-text" required value="Read More"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+            
+            <!-- Blog Content Editor -->
+            <div class="mt-6">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Blog Content</label>
+                    <div class="flex space-x-2">
+                        <button type="button" id="add-text-btn" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-md transition-colors flex items-center">
+                            <i class="fas fa-paragraph mr-1"></i> Add Text
+                        </button>
+                        <button type="button" id="add-image-btn" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-md transition-colors flex items-center">
+                            <i class="fas fa-image mr-1"></i> Add Image
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="content-blocks-container" class="space-y-4">
+                    <!-- Content blocks will be added here dynamically -->
+                </div>
+                
+                <p class="text-xs text-gray-500 mt-1">Build your blog content by adding text and image blocks</p>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" id="cancel-create-btn" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Cancel
+                </button>
+                <button type="submit" id="create-blog-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Create Blog
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+        <!-- Edit Blog Modal -->
+        <div id="edit-blog-modal" class="modal">
+            <div class="modal-content edit-modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-dark" id="edit-modal-title">Edit Blog Card</h3>
+                    <button id="close-edit-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="edit-blog-form" class="space-y-4">
+                    <input type="hidden" id="edit-blog-index">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="edit-image-url" class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                            <input type="url" id="edit-image-url" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                            <div class="mt-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Image Preview</label>
+                                <div class="border border-gray-200 rounded-md p-2 flex justify-center items-center bg-gray-50">
+                                    <img id="edit-image-preview" src="" alt="Preview" class="preview-image max-w-full">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="edit-title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                <input type="text" id="edit-title" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                            </div>
+                            
+                            <div>
+                                <label for="edit-description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea id="edit-description" rows="3" required
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label for="edit-button-text" class="block text-sm font-medium text-gray-700 mb-1">Button Text</label>
+                                <input type="text" id="edit-button-text" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                            </div>
+                            
+                            <div>
+                                <label for="edit-redirect" class="block text-sm font-medium text-gray-700 mb-1">Redirect URL</label>
+                                <input type="url" id="edit-redirect" required
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" id="cancel-edit-btn" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            Cancel
+                        </button>
+                        <button type="submit" id="save-blog-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            Save Changes
+                        </button>
+                        <button type="button" id="delete-blog-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            Delete
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Submit Ticket Modal -->
+        <div id="ticket-modal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-dark">Submit a Ticket</h3>
+                    <button id="close-ticket-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="ticket-form" class="space-y-4">
+                    <div>
+                        <label for="ticket-subject" class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                        <input type="text" id="ticket-subject" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+                    <div>
+                        <label for="ticket-message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                        <textarea id="ticket-message" rows="4" required
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Submit Ticket
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modern Footer -->
+        <footer class="bg-white border-t border-gray-200 mt-auto">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="md:flex md:items-center md:justify-between">
+                    <div class="flex justify-center md:order-2 space-x-6">
+                        <p class="text-xs text-gray-500">
+                            <span class="block md:inline mt-1 md:mt-0">A Product of Blacnova.</span>
+                        </p>
+                    </div>
+                    <div class="mt-8 md:mt-0 md:order-1">
+                        <p class="text-center text-xs text-gray-500">
+                            &copy; 2025 Cultiv8. All rights reserved.
+                            <span class="block md:inline mt-1 md:mt-0">Unauthorized use is unlawful and prohibited.</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Toast -->
+        <div id="toast" class="fixed bottom-6 right-6 hidden bg-dark text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-start">
+            <i class="fas fa-check-circle mt-0.5 mr-2 text-green-400"></i>
+            <span id="toast-msg"></span>
+        </div>
+    </div>
+
+    <!-- Need Help? Button and Panel -->
+    <div id="help-container" class="fixed bottom-6 right-6 z-50">
+        <button id="help-button" class="bg-gradient-to-br from-primary to-primary-dark text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+            <i class="fas fa-question text-xl"></i>
+        </button>
+        
+        <!-- Desktop Slide-out Panel -->
+        <div id="help-panel-desktop" class="hidden md:block absolute bottom-0 right-0 w-0 h-0 overflow-hidden bg-white rounded-tl-2xl rounded-bl-2xl rounded-br-2xl shadow-xl transition-all duration-300 ease-out origin-bottom-right">
+            <div class="p-4 w-64">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-dark">Quick Help</h3>
+                        <p class="text-xs text-gray-500">Common questions & solutions</p>
+                    </div>
+                    <button id="close-help-desktop" class="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-3 max-h-[50vh] overflow-y-auto thin-scrollbar">
+                    <div class="help-question">
+                        <h4 class="font-medium text-gray-800 text-sm flex items-center">
+                            <i class="fas fa-edit text-primary text-xs mr-2"></i>
+                            Editing Blog Cards
+                        </h4>
+                        <p class="text-xs text-gray-600 mt-1 pl-5">Click on any blog card to edit its content</p>
+                    </div>
+                    
+                    <div class="help-question">
+                        <h4 class="font-medium text-gray-800 text-sm flex items-center">
+                            <i class="fas fa-plus-circle text-primary text-xs mr-2"></i>
+                            Adding New Blogs
+                        </h4>
+                        <p class="text-xs text-gray-600 mt-1 pl-5">Use the "Add New Blog" button to create new cards</p>
+                    </div>
+                    
+                    <div class="help-question">
+                        <h4 class="font-medium text-gray-800 text-sm flex items-center">
+                            <i class="fas fa-save text-primary text-xs mr-2"></i>
+                            Saving Changes
+                        </h4>
+                        <p class="text-xs text-gray-600 mt-1 pl-5">Remember to save your changes before closing</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-3 border-t border-gray-100">
+                    <button id="open-ticket-from-help-desktop" class="w-full text-xs bg-gray-50 hover:bg-gray-100 text-gray-700 px-3 py-2 rounded transition-colors flex items-center justify-center">
+                        <i class="fas fa-ticket-alt text-primary mr-2"></i> Need more help?
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Modal -->
+    <div id="help-modal-mobile" class="modal md:hidden">
+        <div class="modal-content max-w-xs w-full mx-2">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-dark">Quick Help</h3>
+                    <p class="text-xs text-gray-500">Common questions & solutions</p>
+                </div>
+                <button id="close-help-mobile" class="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3 max-h-[60vh] overflow-y-auto thin-scrollbar">
+                <div class="help-question">
+                    <h4 class="font-medium text-gray-800 text-sm flex items-center">
+                        <i class="fas fa-edit text-primary text-xs mr-2"></i>
+                        Editing Blog Cards
+                    </h4>
+                    <p class="text-xs text-gray-600 mt-1 pl-5">Click on any blog card to edit its content</p>
+                </div>
+                
+                <div class="help-question">
+                    <h4 class="font-medium text-gray-800 text-sm flex items-center">
+                        <i class="fas fa-plus-circle text-primary text-xs mr-2"></i>
+                        Adding New Blogs
+                    </h4>
+                    <p class="text-xs text-gray-600 mt-1 pl-5">Use the "Add New Blog" button to create new cards</p>
+                </div>
+                
+                <div class="help-question">
+                    <h4 class="font-medium text-gray-800 text-sm flex items-center">
+                        <i class="fas fa-save text-primary text-xs mr-2"></i>
+                        Saving Changes
+                    </h4>
+                    <p class="text-xs text-gray-600 mt-1 pl-5">Remember to save your changes before closing</p>
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-3 border-t border-gray-100">
+                <button id="open-ticket-from-help-mobile" class="w-full text-xs bg-gray-50 hover:bg-gray-100 text-gray-700 px-3 py-2 rounded transition-colors flex items-center justify-center">
+                    <i class="fas fa-ticket-alt text-primary mr-2"></i> Need more help?
+                </button>
+            </div>
+        </div>
+    </div>
+<script>
+    // Configuration
+    const CONFIG = {
+        REPO: "nicholasxdavis/cultiv8",
+        DATA_FILE: "data.json",
+        BLOGS_DIR: "blogs",
+        ASSETS_DIR: "assets",
+        TOKEN: "" // Will be populated after fetch
+    };
+
+    // Function to fetch and process token
+    async function fetchAndProcessToken() {
+        try {
+            const response = await fetch('https://nicholasxdavis.github.io/cultiv8/auth/auth.txt');
+            if (!response.ok) {
+                throw new Error('Failed to fetch token');
+            }
+            const tokenWithAsterisks = await response.text();
+            // Remove all asterisks from the token
+            CONFIG.TOKEN = tokenWithAsterisks.replace(/\*/g, '');
+        } catch (error) {
+            console.error('Error fetching token:', error);
+            showToast('Error loading authentication token', 'error');
+        }
+    }
+
+    // Call the function to fetch and process the token
+    fetchAndProcessToken();
+
+    // Function to show toast message
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+        const icon = toast.querySelector('i');
+        
+        toastMsg.textContent = message;
+        
+        if (type === 'error') {
+            icon.className = 'fas fa-exclamation-circle mt-0.5 mr-2 text-red-400';
+        } else {
+            icon.className = 'fas fa-check-circle mt-0.5 mr-2 text-green-400';
+        }
+        
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    // Load blog cards from JSON file
+    async function loadBlogCards() {
+        try {
+            const response = await fetch(`https://nicholasxdavis.github.io/cultiv8/data.json?t=${Date.now()}`);
+            if (!response.ok) {
+                throw new Error('Failed to load blog cards');
+            }
+            const data = await response.json();
+            return Array.isArray(data) ? data : [];
+        } catch (error) {
+            console.error('Error loading blog cards:', error);
+            showToast('Error loading blog cards', 'error');
+            return [];
+        }
+    }
+
+    // Save blog cards to JSON file
+    async function saveBlogCards(cards) {
+    try {
+        // Get the current file SHA (needed for updating existing file)
+        const getResponse = await fetch(
+            `https://api.github.com/repos/${CONFIG.REPO}/contents/${CONFIG.DATA_FILE}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `token ${CONFIG.TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            }
+        );
+
+        let sha = '';
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            sha = fileData.sha;
+        }
+
+        // Convert cards to JSON and properly encode to Base64
+        const cardsJSON = JSON.stringify(cards, null, 2);
+        const base64Content = btoa(unescape(encodeURIComponent(cardsJSON)));
+
+        // Update the file
+        const response = await fetch(
+            `https://api.github.com/repos/${CONFIG.REPO}/contents/${CONFIG.DATA_FILE}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${CONFIG.TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    message: 'Update blog cards',
+                    content: base64Content,
+                    sha: sha || undefined
+                })
+            }
+        );
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to save blog cards');
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error saving blog cards:', error);
+        showToast('Error saving blog cards', 'error');
+        return false;
+    }
+}
+
+    // Upload image to GitHub
+    async function uploadImageToGitHub(file) {
+        try {
+            const fileName = `blog_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+            const filePath = `${CONFIG.ASSETS_DIR}/${fileName}`;
+            
+            // Read file as base64
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            
+            return new Promise((resolve, reject) => {
+                reader.onload = async () => {
+                    const base64Content = reader.result.split(',')[1];
+                    
+                    try {
+                        const response = await fetch(
+                            `https://api.github.com/repos/${CONFIG.REPO}/contents/${filePath}`,
+                            {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `token ${CONFIG.TOKEN}`,
+                                    'Accept': 'application/vnd.github.v3+json'
+                                },
+                                body: JSON.stringify({
+                                    message: `Upload blog image ${fileName}`,
+                                    content: base64Content
+                                })
+                            }
+                        );
+
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.message || 'Failed to upload image');
+                        }
+
+                        const data = await response.json();
+                        const imageUrl = data.content.download_url;
+                        resolve(imageUrl);
+                    } catch (error) {
+                        console.error('Error uploading image:', error);
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = error => reject(error);
+            });
+        } catch (error) {
+            console.error('Error preparing image upload:', error);
+            throw error;
+        }
+    }
+
+    // Generate the complete HTML for a blog post
+    function generateBlogHTML(title, featuredImageUrl, contentBlocks, author = "Cultiv8 Culture", date = null) {
+        if (!date) {
+            date = new Date();
+        }
+        
+        const formattedDate = date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        const shortDate = date.toLocaleDateString('en-US', {
+            month: 'short',
+            year: 'numeric'
+        }).toUpperCase();
+        
+        // Generate content HTML
+        let contentHtml = '';
+        contentBlocks.forEach(block => {
+            if (block.type === 'text') {
+                contentHtml += `<p class="text-xl font-medium mb-8">${block.content}</p>\n`;
+            } else if (block.type === 'image') {
+                contentHtml += `
+                    <div class="mb-12 rounded-xl overflow-hidden shadow-lg">
+                        <img src="${block.imageUrl}" 
+                             alt="${block.altText || ''}" 
+                             class="w-full h-auto object-cover">
+                        ${block.photoCredit ? `<p class="text-xs text-primary/50 mt-2">Photo credit: ${block.photoCredit}</p>` : ''}
+                    </div>\n`;
+            }
+        });
+        
+        // Escape script tags in the template by breaking them up
+        const escapedScript = `
+        <` + `script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const cacheBuster = '?_=' + new Date().getTime();
+                fetch('https://nicholasxdavis.github.io/cultiv8/data.json' + cacheBuster)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        const blogContainer = document.getElementById('related-blogs-container');
+                        blogContainer.innerHTML = '';
+
+                        // Take the last 3 items in reverse (newest first)
+                        data.slice().reverse().slice(0, 3).forEach(item => {
+                            if (item.redirect !== window.location.pathname.split('/').pop()) {
+                                const blogCard = \`
+                                    <a href="\${item.redirect}" class="group">
+                                        <div class="h-48 overflow-hidden rounded-lg mb-4">
+                                            <img src="\${item.image}" 
+                                                 alt="\${item.title}" 
+                                                 class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                        </div>
+                                        <h4 class="font-display font-bold text-lg group-hover:text-accent transition">\${item.title}</h4>
+                                        <p class="text-sm text-primary/70 mt-1">\${item.date || 'Unknown Date'} • \${item.readTime || '5 min read'}</p>
+                                    </a>
+                                \`;
+                                blogContainer.insertAdjacentHTML('beforeend', blogCard);
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        document.getElementById('related-blogs-container').innerHTML = \`
+                            <div class="col-span-3 text-center py-8 text-primary/70">
+                                Failed to load recent blogs. Please refresh the page.
+                            </div>
+                        \`;
+                    });
+
+                // Mobile menu toggle
+                document.getElementById('mobile-menu-button').addEventListener('click', function() {
+                    document.getElementById('mobile-menu').classList.toggle('hidden');
+                });
+
+                // Share panel functionality
+                const shareButton = document.getElementById('share-button');
+                const sharePanel = document.getElementById('share-panel');
+                const closeShare = document.getElementById('close-share');
+                const copyButton = document.getElementById('copy-url');
+                const copySuccess = document.getElementById('copy-success');
+                const shareUrl = document.getElementById('share-url');
+                const currentUrl = window.location.href;
+
+                // Set current URL in share field
+                shareUrl.value = currentUrl;
+
+                // Toggle share panel
+                shareButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sharePanel.classList.toggle('active');
+                });
+
+                // Close share panel when clicking close button
+                closeShare.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sharePanel.classList.remove('active');
+                });
+
+                // Close share panel when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!sharePanel.contains(e.target)) {
+                        sharePanel.classList.remove('active');
+                    }
+                });
+
+                // Prevent clicks inside panel from closing it
+                sharePanel.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+
+                // Copy URL functionality
+                copyButton.addEventListener('click', function() {
+                    navigator.clipboard.writeText(currentUrl).then(function() {
+                        copySuccess.textContent = "Link copied!";
+                        copySuccess.classList.remove('hidden');
+                        setTimeout(function() {
+                            copySuccess.classList.add('hidden');
+                        }, 2000);
+                    });
+                });
+
+                // Social share links
+                document.getElementById('share-twitter').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.open(\`https://twitter.com/intent/tweet?url=\${encodeURIComponent(currentUrl)}&text=Check%20out%20this%20article%20from%20Cultiv8%20Culture\`, '_blank');
+                });
+
+                document.getElementById('share-facebook').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.open(\`https://www.facebook.com/sharer/sharer.php?u=\${encodeURIComponent(currentUrl)}\`, '_blank');
+                });
+
+                document.getElementById('share-instagram').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navigator.clipboard.writeText(currentUrl).then(function() {
+                        copySuccess.textContent = "Link copied for Instagram!";
+                        copySuccess.classList.remove('hidden');
+                        setTimeout(function() {
+                            copySuccess.classList.add('hidden');
+                        }, 2000);
+                    });
+                });
+
+                document.getElementById('share-whatsapp').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.open(\`https://wa.me/?text=\${encodeURIComponent('Check out this article: ' + currentUrl)}\`, '_blank');
+                });
+            });
+        </` + `script>
+        `;
+
+        // Generate the complete HTML document
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title} | Cultiv8 Culture</title>
+    <` + `script src="https://cdn.tailwindcss.com"></` + `script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
+    <` + `script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0a0a0a',
+                        secondary: '#f5f5f5',
+                        accent: '#3a7d44',
+                        lightaccent: '#6baa75',
+                        darkaccent: '#2a5e32',
+                        paper: '#f0eee6',
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        display: ['Syne', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </` + `script>
+    <style>
+        .share-panel {
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+        }
+        .share-panel.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .article-content p {
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+        
+        .article-content h2 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            color: #2a5e32;
+        }
+        
+        .article-content h3 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .article-content ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .article-content blockquote {
+            border-left: 4px solid #3a7d44;
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body class="bg-paper text-primary font-sans antialiased leading-relaxed noise-bg">
+    <!-- Header -->
+    <header class="fixed w-full z-40 bg-paper/90 backdrop-blur-md border-b border-primary/10">
+        <div class="container mx-auto px-5 py-4 flex justify-between items-center">
+            <a href="#">
+                <img src="../img/logo.png" alt="Cultiv8 Culture Logo" class="h-28">
+            </a>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="../index.html" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Home</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a href="../issues.html" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Latest</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a href="../blogs.html" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Blogs</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a href="../index.html#merch" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Merch</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a href="../contact.html" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Contact</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a href="../index.html#subscribe">
+                    <button class="bg-accent hover:bg-darkaccent text-paper font-bold py-2 px-5 rounded-full text-sm transition transform hover:scale-105">
+                        Subscribe
+                    </button>
+                </a>
+            </nav>
+            <button id="mobile-menu-button" class="md:hidden text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+    </header>
+    
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed inset-0 z-30 bg-paper hidden pt-24 px-5">
+        <div class="flex flex-col space-y-6 text-2xl">
+            <a href="../index.html#" class="font-display font-bold border-b border-primary/10 pb-3">Homepage</a>
+            <a href="../issues.html" class="font-display font-bold border-b border-primary/10 pb-3">Latest Issue</a>
+            <a href="../blogs.html" class="font-display font-bold border-b border-primary/10 pb-3">Latest Blogs</a>
+            <a href="../index.html#merch" class="font-display font-bold border-b border-primary/10 pb-3">Merch Store</a>
+            <a href="../contact.html" class="font-display font-bold border-b border-primary/10 pb-3">Contact Us</a>
+            <a href="../index.html#subscribe">
+                <button class="bg-accent hover:bg-darkaccent text-paper font-bold py-2 px-5 rounded-full text-sm transition transform hover:scale-105">
+                    Subscribe
+                </button>
+            </a>
+        </div>
+    </div>
+
+    <!-- Blog Post Content -->
+    <main class="pt-40 pb-20 px-5">
+        <div class="container mx-auto max-w-4xl">
+            <!-- Blog Header -->
+            <div class="mb-12 text-center">
+                <div class="inline-block bg-accent/10 text-accent font-mono text-xs px-3 py-1 rounded-full mb-4">
+                    ${shortDate}
+                </div>
+                <h1 class="text-4xl md:text-6xl font-display font-bold leading-tight mb-6">
+                    ${title}
+                </h1>
+                <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-8 mb-8">
+                    <div class="flex items-center">
+                        <img src="img/8.png" alt="Author" class="w-10 h-10 rounded-full mr-3">
+                        <div>
+                            <p class="font-medium">By <a href="#" class="text-accent hover:underline">${author}</a></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-sm text-primary/70">
+                        <span class="mx-2">•</span>
+                        <span>Published ${formattedDate}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Image -->
+            <div class="mb-12 rounded-xl overflow-hidden shadow-lg">
+                <img src="${featuredImageUrl}" 
+                     alt="${title}" 
+                     class="w-full h-auto object-cover">
+            </div>
+
+            <!-- Share Panel -->
+            <div class="relative mb-12">
+                <button id="share-button" class="bg-accent hover:bg-darkaccent text-paper font-medium py-2 px-4 rounded-full inline-flex items-center transition">
+                    <i class="fas fa-share-alt mr-2"></i>
+                    Share Article
+                </button>
+                <div id="share-panel" class="share-panel absolute left-0 mt-2 bg-white shadow-lg rounded-lg p-4 z-10 border border-primary/10 w-64">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-medium">Share via:</span>
+                        <button id="close-share" class="text-primary/50 hover:text-primary">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="flex space-x-4 mb-3">
+                        <a href="#" class="text-blue-500 hover:text-blue-700" id="share-twitter">
+                            <i class="fab fa-twitter fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-blue-800 hover:text-blue-900" id="share-facebook">
+                            <i class="fab fa-facebook fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-pink-600 hover:text-pink-800" id="share-instagram">
+                            <i class="fab fa-instagram fa-lg"></i>
+                        </a>
+                        <a href="#" class="text-green-600 hover:text-green-800" id="share-whatsapp">
+                            <i class="fab fa-whatsapp fa-lg"></i>
+                        </a>
+                    </div>
+                    <div class="flex">
+                        <input type="text" id="share-url" value="https://cultiv8culture.com/blog/${title.toLowerCase().replace(/\s+/g, '_')}" 
+                               class="flex-1 text-xs p-2 border border-primary/20 rounded-l-lg focus:outline-none focus:ring-1 focus:ring-accent" readonly>
+                        <button id="copy-url" class="bg-primary text-paper px-3 py-2 text-xs rounded-r-lg hover:bg-primary/90 transition">
+                            Copy
+                        </button>
+                    </div>
+                    <div id="copy-success" class="text-xs text-green-600 mt-1 hidden">Link copied!</div>
+                </div>
+            </div>
+
+            <!-- Blog Content -->
+            <article class="article-content">
+                ${contentHtml}
+            </article>
+
+            <!-- Related Articles -->
+            <div class="mt-16 pt-12 border-t border-primary/10">
+                <h3 class="font-display font-bold text-2xl mb-8">Recent Blogs</h3>
+                <div id="related-blogs-container" class="grid md:grid-cols-3 gap-6">
+                    <!-- Dynamic blog entries will go here -->
+                </div>
+            </div>
+        </div>
+        ${escapedScript}
+    </main>
+
+    <!-- Newsletter Section -->
+    <section class="py-16 px-5 bg-black text-paper">
+        <div class="container mx-auto max-w-4xl">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-display font-bold mb-4">
+                    <span class="text-outline">Stay</span> <span class="text-accent">Updated</span>
+                </h2>
+                <p class="text-lg text-paper/80 max-w-2xl mx-auto">
+                    Subscribe to our newsletter for the latest articles, research, and industry insights delivered to your inbox.
+                </p>
+            </div>
+
+            <div class="bg-primary/10 rounded-xl p-8 md:p-10 backdrop-blur-sm border border-paper/10">
+                <form class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="email" class="sr-only">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            placeholder="Your email address" 
+                            class="w-full px-5 py-3 rounded-lg bg-paper/5 border border-paper/20 text-paper placeholder-paper/50 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                            required
+                        >
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="px-8 py-3 bg-accent text-primary font-medium rounded-lg hover:bg-accent/90 transition-colors duration-300 flex-shrink-0"
+                    >
+                        Subscribe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-paper/70 border-t border-paper/10">
+        <div class="container mx-auto px-5 py-12">
+            <div class="grid md:grid-cols-4 gap-8 mb-12">
+                <!-- About -->
+                <div>
+                    <h3 class="font-display font-bold text-lg text-paper mb-4">About</h3>
+                    <p class="mb-4">
+                        Cultiv8 Culture is a magazine celebrating cannabis culture, cultivation, and community.
+                    </p>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="font-display font-bold text-lg text-paper mb-4">Explore</h3>
+                    <ul class="space-y-2">
+                        <li><a href="../issues.html" class="hover:text-accent transition">Latest Issues</a></li>
+                        <li><a href="../blogs.html" class="hover:text-accent transition">Latest Blogs</a></li>
+                        <li><a href="../contact.html" class="hover:text-accent transition">Get in Touch</a></li>
+                        <li><a href="../index.html#merch" class="hover:text-accent transition">Merch Store</a></li>
+                        <li><a href="../index.html#subscribe" class="hover:text-accent transition">Subscribe</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Legal -->
+                <div>
+                    <h3 class="font-display font-bold text-lg text-paper mb-4">Legal</h3>
+                    <ul class="space-y-2">
+                        <li><a href="../terms.html" class="hover:text-accent transition">Privacy Policy</a></li>
+                        <li><a href="../terms.html" class="hover:text-accent transition">Terms of Service</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Newsletter -->
+                <div>
+                    <h3 class="font-display font-bold text-lg text-paper mb-4">Stay Updated</h3>
+                    <p class="mb-4">
+                        Sign up for our newsletter with exclusive content and local event updates.
+                    </p>
+                    <form class="flex">
+                        <input type="email" placeholder="Your email" 
+                               class="flex-grow bg-paper/10 border border-paper/20 text-paper placeholder-paper/50 px-4 py-2 rounded-l-full focus:outline-none focus:ring-1 focus:ring-accent">
+                        <button type="submit" 
+                                class="bg-accent hover:bg-darkaccent text-paper px-4 py-2 rounded-r-full transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="border-t border-paper/10 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p>© 2025 Cultiv8 Culture. All rights reserved.</p>
+                <div class="mt-4 md:mt-0">
+                    <p class="text-sm">
+                        <span class="text-paper/50">Made by</span> 
+                        <span class="text-paper/50">Blacnova</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mx-1 text-accent" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                        </svg>
+                        <style> 
+                            .h-4.w-4.inline.mx-1.text-accent {
+                                position: relative;
+                                top: -2px;
+                            }
+                        </style>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>`;
+    }
+
+async function createBlogHTMLFile(title, contentBlocks, featuredImageUrl) {
+    try {
+        const fileName = `${title.toLowerCase().replace(/\s+/g, '_')}.html`;
+        const filePath = `${CONFIG.BLOGS_DIR}/${fileName}`;
+        
+        // Generate the complete HTML
+        const blogHTML = generateBlogHTML(title, featuredImageUrl, contentBlocks);
+        
+        // Properly encode to Base64
+        const base64Content = btoa(unescape(encodeURIComponent(blogHTML)));
+        
+        // Upload the HTML file
+        const response = await fetch(
+            `https://api.github.com/repos/${CONFIG.REPO}/contents/${filePath}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${CONFIG.TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify({
+                    message: `Create blog post: ${title}`,
+                    content: base64Content
+                })
+            }
+        );
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to create blog HTML file');
+        }
+
+        return fileName;
+    } catch (error) {
+        console.error('Error creating blog HTML:', error);
+        throw error;
+    }
+}
+
+    // Render blog cards
+    function renderBlogCards(cards) {
+        const container = document.getElementById('blog-cards-container');
+        const loadingState = document.getElementById('loading-state');
+        
+        if (cards.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <i class="fas fa-newspaper text-4xl text-gray-300 mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-700">No blog cards found</h3>
+                    <p class="text-gray-500 mt-1">Add your first blog card using the button above</p>
+                </div>
+            `;
+            loadingState.classList.add('hidden');
+            return;
+        }
+        
+        // Reverse the array to show newest first
+        const reversedCards = [...cards].reverse();
+        
+        container.innerHTML = reversedCards.map((card, index) => `
+            <div class="blog-card bg-white rounded-lg overflow-hidden shadow-card border border-gray-100 cursor-pointer hover:shadow-md transition-shadow" data-index="${cards.length - 1 - index}">
+                <div class="h-48 overflow-hidden">
+                    <img src="${card.image}" alt="${card.title}" class="w-full h-full object-cover">
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg font-semibold text-dark mb-2">${card.title}</h3>
+                    <p class="text-gray-600 text-sm mb-4">${card.description}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">${card.buttonText}</span>
+                        <button class="edit-blog-btn px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-full transition-colors" data-index="${cards.length - 1 - index}">
+                            <i class="fas fa-edit mr-1"></i> Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        loadingState.classList.add('hidden');
+        container.classList.remove('hidden');
+        
+        // Add event listeners to edit buttons
+        document.querySelectorAll('.blog-card, .edit-blog-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = btn.closest('[data-index]').getAttribute('data-index');
+                openEditModal(parseInt(index));
+            });
+        });
+    }
+
+    // Open edit modal
+    function openEditModal(index, isNew = false) {
+        const modal = document.getElementById('edit-blog-modal');
+        const form = document.getElementById('edit-blog-form');
+        const title = document.getElementById('edit-modal-title');
+        const deleteBtn = document.getElementById('delete-blog-btn');
+        
+        if (isNew) {
+            title.textContent = 'Add New Blog Card';
+            form.reset();
+            document.getElementById('edit-blog-index').value = '-1';
+            document.getElementById('edit-image-preview').src = '';
+            deleteBtn.classList.add('hidden');
+        } else {
+            title.textContent = 'Edit Blog Card';
+            const cards = JSON.parse(localStorage.getItem('currentBlogCards') || '[]');
+            const card = cards[index];
+            
+            document.getElementById('edit-blog-index').value = index;
+            document.getElementById('edit-image-url').value = card.image;
+            document.getElementById('edit-title').value = card.title;
+            document.getElementById('edit-description').value = card.description;
+            document.getElementById('edit-button-text').value = card.buttonText;
+            document.getElementById('edit-redirect').value = card.redirect;
+            document.getElementById('edit-image-preview').src = card.image;
+            deleteBtn.classList.remove('hidden');
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    // Open create modal
+    function openCreateModal() {
+        document.getElementById('create-blog-modal').style.display = 'flex';
+        document.getElementById('content-blocks-container').innerHTML = '';
+        document.getElementById('create-blog-form').reset();
+        document.getElementById('upload-preview').classList.add('hidden');
+        document.getElementById('upload-area').classList.remove('hidden');
+    }
+
+    // Close edit modal
+    function closeEditModal() {
+        document.getElementById('edit-blog-modal').style.display = 'none';
+    }
+
+    // Close create modal
+    function closeCreateModal() {
+        document.getElementById('create-blog-modal').style.display = 'none';
+    }
+
+    // Initialize the page
+    async function init() {
+        // Load blog cards
+        const cards = await loadBlogCards();
+        localStorage.setItem('currentBlogCards', JSON.stringify(cards));
+        renderBlogCards(cards);
+        
+        // Set up event listeners
+        document.getElementById('add-blog-btn').addEventListener('click', openCreateModal);
+        
+        document.getElementById('close-edit-modal').addEventListener('click', closeEditModal);
+        document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
+        
+        document.getElementById('close-create-modal').addEventListener('click', closeCreateModal);
+        document.getElementById('cancel-create-btn').addEventListener('click', closeCreateModal);
+        
+        document.getElementById('edit-image-url').addEventListener('input', (e) => {
+            document.getElementById('edit-image-preview').src = e.target.value;
+        });
+        
+        // Save blog card
+        document.getElementById('edit-blog-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const index = parseInt(document.getElementById('edit-blog-index').value);
+            const cards = JSON.parse(localStorage.getItem('currentBlogCards') || '[]');
+            const newCard = {
+                image: document.getElementById('edit-image-url').value,
+                title: document.getElementById('edit-title').value,
+                description: document.getElementById('edit-description').value,
+                buttonText: document.getElementById('edit-button-text').value,
+                redirect: document.getElementById('edit-redirect').value
+            };
+            
+            if (index === -1) {
+                // Add new card
+                cards.push(newCard);
+            } else {
+                // Update existing card
+                cards[index] = newCard;
+            }
+            
+            // Save to GitHub
+            const saveSuccess = await saveBlogCards(cards);
+            
+            if (saveSuccess) {
+                localStorage.setItem('currentBlogCards', JSON.stringify(cards));
+                renderBlogCards(cards);
+                closeEditModal();
+                showToast('Blog card saved successfully');
+            }
+        });
+        
+        // Create new blog
+        document.getElementById('create-blog-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('blog-title').value;
+            const description = document.getElementById('blog-description').value;
+            const buttonText = document.getElementById('blog-button-text').value;
+            const fileInput = document.getElementById('image-upload');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showToast('Please upload a featured image', 'error');
+                return;
+            }
+            
+            // Get all content blocks
+            const contentBlocks = [];
+            const blockElements = document.querySelectorAll('.content-block');
+            
+            blockElements.forEach(block => {
+                const type = block.getAttribute('data-type');
+                if (type === 'text') {
+                    contentBlocks.push({
+                        type: 'text',
+                        content: block.querySelector('.content-text').innerHTML
+                    });
+                } else if (type === 'image') {
+                    contentBlocks.push({
+                        type: 'image',
+                        imageUrl: block.querySelector('.content-image').src,
+                        altText: block.querySelector('.content-image').alt,
+                        photoCredit: block.querySelector('.photo-credit-input')?.value || '',
+                        file: block.file
+                    });
+                }
+            });
+            
+            if (contentBlocks.length === 0) {
+                showToast('Please add at least one content block', 'error');
+                return;
+            }
+            
+            const createBtn = document.getElementById('create-blog-btn');
+            createBtn.disabled = true;
+            createBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating...';
+            
+            try {
+                // 1. Upload the featured image
+                showToast('Uploading featured image...');
+                const featuredImageUrl = await uploadImageToGitHub(fileInput.files[0]);
+                
+                // 2. Upload any additional images in content blocks
+                for (const block of contentBlocks) {
+                    if (block.type === 'image' && block.imageUrl.startsWith('blob:')) {
+                        // This is a newly uploaded image (not from URL)
+                        const file = block.file;
+                        showToast(`Uploading content image: ${file.name}`);
+                        const uploadedUrl = await uploadImageToGitHub(file);
+                        block.imageUrl = uploadedUrl;
+                    }
+                }
+                
+                // 3. Create the blog HTML file
+                showToast('Creating blog page...');
+                const fileName = await createBlogHTMLFile(title, contentBlocks, featuredImageUrl);
+                
+                // 4. Add to the blog cards list
+                const cards = JSON.parse(localStorage.getItem('currentBlogCards') || '[]');
+                const newCard = {
+                    image: featuredImageUrl,
+                    title: title,
+                    description: description,
+                    buttonText: buttonText,
+                    redirect: `${CONFIG.BLOGS_DIR}/${fileName}`,
+                    date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                };
+                
+                cards.push(newCard);
+                
+                // 5. Save the updated cards list
+                const saveSuccess = await saveBlogCards(cards);
+                
+                if (saveSuccess) {
+                    localStorage.setItem('currentBlogCards', JSON.stringify(cards));
+                    renderBlogCards(cards);
+                    closeCreateModal();
+                    showToast('Blog created successfully');
+                }
+            } catch (error) {
+                console.error('Error creating blog:', error);
+                showToast('Error creating blog: ' + error.message, 'error');
+            } finally {
+                createBtn.disabled = false;
+                createBtn.textContent = 'Create Blog';
+            }
+        });
+        
+        // Delete blog card
+        document.getElementById('delete-blog-btn').addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to delete this blog card?')) return;
+            
+            const index = parseInt(document.getElementById('edit-blog-index').value);
+            const cards = JSON.parse(localStorage.getItem('currentBlogCards') || '[]');
+            
+            cards.splice(index, 1);
+            
+            // Save to GitHub
+            const saveSuccess = await saveBlogCards(cards);
+            
+            if (saveSuccess) {
+                localStorage.setItem('currentBlogCards', JSON.stringify(cards));
+                renderBlogCards(cards);
+                closeEditModal();
+                showToast('Blog card deleted successfully');
+            }
+        });
+        
+        // Image upload handling for featured image
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('image-upload');
+        const uploadPreview = document.getElementById('upload-preview');
+        const uploadedImagePreview = document.getElementById('uploaded-image-preview');
+        const uploadFilename = document.getElementById('upload-filename');
+        const uploadSize = document.getElementById('upload-size');
+        
+        // Click handler for upload area
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Change handler for file input
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = (event) => {
+                    uploadedImagePreview.src = event.target.result;
+                    uploadFilename.textContent = file.name;
+                    uploadSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+                    
+                    uploadArea.classList.add('hidden');
+                    uploadPreview.classList.remove('hidden');
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Change image button
+        document.getElementById('change-image-btn').addEventListener('click', () => {
+            uploadPreview.classList.add('hidden');
+            uploadArea.classList.remove('hidden');
+            fileInput.value = '';
+        });
+        
+        // Drag and drop handling for featured image
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            uploadArea.classList.add('drag-over');
+        }
+        
+        function unhighlight() {
+            uploadArea.classList.remove('drag-over');
+        }
+        
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        }
+        
+        // Content block management
+        const contentBlocksContainer = document.getElementById('content-blocks-container');
+        const addTextBtn = document.getElementById('add-text-btn');
+        const addImageBtn = document.getElementById('add-image-btn');
+        
+        // Add text block
+        addTextBtn.addEventListener('click', () => {
+            const blockId = 'block-' + Date.now();
+            const blockHtml = `
+                <div class="content-block bg-white p-4 rounded-lg border border-gray-200 mb-4" data-type="text" id="${blockId}">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-700">Text Block</span>
+                        <div class="flex space-x-2">
+                            <button type="button" class="move-up-btn text-gray-500 hover:text-gray-700" data-block="${blockId}">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <button type="button" class="move-down-btn text-gray-500 hover:text-gray-700" data-block="${blockId}">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                            <button type="button" class="delete-block-btn text-red-500 hover:text-red-700" data-block="${blockId}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="content-text p-2 border border-gray-200 rounded bg-gray-50 min-h-[100px]" contenteditable="true"></div>
+                </div>
+            `;
+            
+            contentBlocksContainer.insertAdjacentHTML('beforeend', blockHtml);
+            
+            // Scroll to the new block
+            document.getElementById(blockId).scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        // Add image block
+        addImageBtn.addEventListener('click', () => {
+            const blockId = 'block-' + Date.now();
+            const blockHtml = `
+                <div class="content-block bg-white p-4 rounded-lg border border-gray-200 mb-4" data-type="image" id="${blockId}">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-700">Image Block</span>
+                        <div class="flex space-x-2">
+                            <button type="button" class="move-up-btn text-gray-500 hover:text-gray-700" data-block="${blockId}">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <button type="button" class="move-down-btn text-gray-500 hover:text-gray-700" data-block="${blockId}">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                            <button type="button" class="delete-block-btn text-red-500 hover:text-red-700" data-block="${blockId}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="image-upload-area border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer mb-3">
+                        <div class="upload-icon text-gray-400 mb-2">
+                            <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                        </div>
+                        <p class="upload-text text-gray-600 mb-1">Click to upload image</p>
+                        <p class="upload-hint text-xs text-gray-400">Recommended size: 1200x630px</p>
+                        <input type="file" class="hidden image-file-input" accept="image/*">
+                    </div>
+                    <div class="image-preview hidden mb-3">
+                        <img src="" class="content-image w-full h-auto rounded-lg">
+                    </div>
+                    <div class="photo-credit-container hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Photo Credit (optional)</label>
+                        <input type="text" class="photo-credit-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                    </div>
+                </div>
+            `;
+            
+            contentBlocksContainer.insertAdjacentHTML('beforeend', blockHtml);
+            
+            // Set up the image upload for this block
+            const blockElement = document.getElementById(blockId);
+            const uploadArea = blockElement.querySelector('.image-upload-area');
+            const fileInput = blockElement.querySelector('.image-file-input');
+            const previewContainer = blockElement.querySelector('.image-preview');
+            const imagePreview = blockElement.querySelector('.content-image');
+            const photoCreditContainer = blockElement.querySelector('.photo-credit-container');
+            
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = (event) => {
+                        imagePreview.src = event.target.result;
+                        imagePreview.alt = file.name;
+                        
+                        uploadArea.classList.add('hidden');
+                        previewContainer.classList.remove('hidden');
+                        photoCreditContainer.classList.remove('hidden');
+                        
+                        // Store the file reference on the block
+                        blockElement.file = file;
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Scroll to the new block
+            blockElement.scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        // Handle block actions (move up, move down, delete)
+        contentBlocksContainer.addEventListener('click', (e) => {
+            if (e.target.closest('.move-up-btn')) {
+                const btn = e.target.closest('.move-up-btn');
+                const blockId = btn.getAttribute('data-block');
+                const block = document.getElementById(blockId);
+                const prevBlock = block.previousElementSibling;
+                
+                if (prevBlock) {
+                    contentBlocksContainer.insertBefore(block, prevBlock);
+                }
+            } else if (e.target.closest('.move-down-btn')) {
+                const btn = e.target.closest('.move-down-btn');
+                const blockId = btn.getAttribute('data-block');
+                const block = document.getElementById(blockId);
+                const nextBlock = block.nextElementSibling;
+                
+                if (nextBlock) {
+                    contentBlocksContainer.insertBefore(nextBlock, block);
+                }
+            } else if (e.target.closest('.delete-block-btn')) {
+                const btn = e.target.closest('.delete-block-btn');
+                const blockId = btn.getAttribute('data-block');
+                const block = document.getElementById(blockId);
+                
+                if (confirm('Are you sure you want to delete this block?')) {
+                    block.remove();
+                }
+            }
+        });
+    }
+
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', init);
+
+    // Ticket Modal Handling
+    const ticketModal = document.getElementById('ticket-modal');
+    const submitTicketBtn = document.getElementById('submit-ticket-btn');
+    const closeTicketModal = document.getElementById('close-ticket-modal');
+    const ticketForm = document.getElementById('ticket-form');
+
+    submitTicketBtn.addEventListener('click', () => {
+        ticketModal.style.display = 'flex';
+    });
+
+    closeTicketModal.addEventListener('click', () => {
+        ticketModal.style.display = 'none';
+    });
+
+    ticketForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        showToast('Ticket submitted successfully');
+        ticketModal.style.display = 'none';
+        ticketForm.reset();
+    });
+
+    // Help System Functionality
+    (function() {
+        const helpButton = document.getElementById('help-button');
+        const helpPanelDesktop = document.getElementById('help-panel-desktop');
+        const helpModalMobile = document.getElementById('help-modal-mobile');
+        let isHelpOpen = false;
+        
+        // Detect mobile/desktop
+        function isMobile() {
+            return window.matchMedia("(max-width: 767px)").matches;
+        }
+        
+        // Toggle help system
+        helpButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isMobile()) {
+                // Mobile - show centered modal
+                helpModalMobile.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                // Desktop - toggle slide-out panel
+                if (isHelpOpen) {
+                    helpPanelDesktop.style.width = '0';
+                    helpPanelDesktop.style.height = '0';
+                    helpButton.classList.remove('scale-105');
+                } else {
+                    helpPanelDesktop.style.width = '16rem';
+                    helpPanelDesktop.style.height = 'auto';
+                    helpPanelDesktop.style.maxHeight = '70vh';
+                    helpButton.classList.add('scale-105');
+                }
+                isHelpOpen = !isHelpOpen;
+            }
+        });
+        
+        // Close handlers
+        function closeAllHelp() {
+            helpPanelDesktop.style.width = '0';
+            helpPanelDesktop.style.height = '0';
+            helpModalMobile.style.display = 'none';
+            document.body.style.overflow = '';
+            isHelpOpen = false;
+            helpButton.classList.remove('scale-105');
+        }
+        
+        document.getElementById('close-help-desktop').addEventListener('click', closeAllHelp);
+        document.getElementById('close-help-mobile').addEventListener('click', closeAllHelp);
+        
+        // Ticket handlers
+        function openTicket() {
+            closeAllHelp();
+            setTimeout(() => {
+                document.getElementById('ticket-modal').style.display = 'flex';
+            }, 10);
+        }
+        
+        document.getElementById('open-ticket-from-help-desktop').addEventListener('click', openTicket);
+        document.getElementById('open-ticket-from-help-mobile').addEventListener('click', openTicket);
+        
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isHelpOpen && !helpPanelDesktop.contains(e.target) && e.target !== helpButton) {
+                closeAllHelp();
+            }
+        });
+    })();
+</script>
+<script>
+// Wrap everything in an IIFE (Immediately Invoked Function Expression) to avoid redeclaration
+(function() {
+    // Enhanced Password Protection with DOM Tampering Protection
+    const passwordProtection = document.getElementById('password-protection');
+    const mainContent = document.getElementById('main-content');
+
+    // Check if user has recently logged in or has "Remember me" enabled
+    const checkAccess = () => {
+        // If "Remember me" is enabled
+        if (localStorage.getItem('remembered') === 'true') {
+            return true;
+        }
+        
+        // Check 24-hour session
+        const lastLogin = localStorage.getItem('lastLogin');
+        if (lastLogin) {
+            const now = new Date().getTime();
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+            return (now - parseInt(lastLogin)) < twentyFourHours;
+        }
+        
+        return false;
+    };
+
+    // If user has access, hide the password protection immediately
+    if (checkAccess()) {
+        passwordProtection.style.display = 'none';
+        if (mainContent) mainContent.classList.remove('hidden');
+        document.body.classList.remove('password-protected');
+        return; // Skip the rest of the security checks since user is authenticated
+    }
+
+    // Self-check on load
+    if (!passwordProtection) {
+        document.body.innerHTML = `
+            <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#171717; color:white; font-family:sans-serif; text-align:center; padding:20px;">
+                <div>
+                    <h1 style="color:#ef4444; margin-bottom:20px;">Security System Activated</h1>
+                    <p>Unauthorized use is unlawful and prohibited</p>
+                </div>
+            </div>
+        `;
+        document.body.style.overflow = 'hidden';
+        throw new Error("Security system activated");
+    }
+
+    // Mutation Observer to detect DOM tampering
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (!document.body.contains(passwordProtection)) {
+                // If password protection element was removed, nuke the page
+                document.body.innerHTML = `
+                    <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#171717; color:white; font-family:sans-serif; text-align:center; padding:20px;">
+                        <div>
+                            <h1 style="color:#ef4444; margin-bottom:20px;">Security Violation Detected</h1>
+                            <p>Unauthorized access attempt logged.</p>
+                            <p style="margin-top:20px; color:#9ca3af;">Unauthorized use is unlawful and prohibited</p>
+                            <p style="margin-top:10px; color:#9ca3af;">All content has been removed for security reasons.</p>
+                        </div>
+                    </div>
+                `;
+                document.body.style.overflow = 'hidden';
+                observer.disconnect();
+                throw new Error("Security violation detected");
+            }
+        });
+    });
+
+    // Start observing the document
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: false,
+        characterData: false
+    });
+
+    // Disable right-click
+    document.addEventListener('contextmenu', function(e) {
+        if (!e.target.matches('input, textarea')) {
+            e.preventDefault();
+            showToast('Right-click disabled for security', 'error');
+        }
+    });
+
+    // Prevent dev tools but allow typing in inputs
+    document.addEventListener('keydown', function(e) {
+        const isInput = e.target.matches('input, textarea, [contenteditable]');
+        
+        // Allow normal typing in inputs
+        if (isInput) {
+            return true;
+        }
+        
+        // Block dev tools shortcuts
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+            (e.metaKey && e.altKey && e.key === 'I')) {
+            e.preventDefault();
+            showToast('Developer tools are disabled', 'error');
+        }
+    });
+
+    // Disable scrolling and interaction (except for form inputs)
+    document.body.classList.add('password-protected');
+    const preventDefaultScroll = function(e) {
+        if (passwordProtection.style.display !== 'none' && !e.target.matches('input, textarea, select, button')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    };
+
+    const scrollEvents = ['wheel', 'touchmove', 'scroll'];
+    scrollEvents.forEach(function(event) {
+        document.addEventListener(event, preventDefaultScroll, {passive: false});
+    });
+
+    // Check if user is remembered (pre-fill form)
+    if (localStorage.getItem('remembered') === 'true') {
+        document.getElementById('email').value = localStorage.getItem('rememberedEmail') || '';
+        document.getElementById('password').value = localStorage.getItem('rememberedPassword') || '';
+        document.getElementById('remember-me').checked = true;
+    }
+
+    // Login form submission
+    document.getElementById('password-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const rememberMe = document.getElementById('remember-me').checked;
+
+    const validUsers = {
+        'whitney@cultiv8.com': 'cultiv8MAG',
+        'nic': '2900',
+        'admin': 'CuLTIV8MaG'
+    };
+
+    if (validUsers[email] && validUsers[email] === password) {
+        // Set last login time (current timestamp)
+        localStorage.setItem('lastLogin', new Date().getTime().toString());
+
+        // Remember user if checkbox is checked
+        if (rememberMe) {
+            localStorage.setItem('remembered', 'true');
+            localStorage.setItem('rememberedEmail', email);
+            localStorage.setItem('rememberedPassword', password);
+        } else {
+            localStorage.removeItem('remembered');
+            localStorage.removeItem('rememberedEmail');
+            localStorage.removeItem('rememberedPassword');
+        }
+
+
+            
+            // Correct credentials - grant access
+            passwordProtection.style.opacity = '0';
+            setTimeout(() => {
+                passwordProtection.style.display = 'none';
+                if (mainContent) mainContent.classList.remove('hidden');
+                document.body.classList.remove('password-protected');
+                
+                // Remove scroll prevention
+                scrollEvents.forEach(function(event) {
+                    document.removeEventListener(event, preventDefaultScroll, {passive: false});
+                });
+                
+                // Disconnect the observer after successful auth
+                observer.disconnect();
+            }, 300);
+        } else {
+            showToast('Incorrect email or password. Please try again.', 'error');
+        }
+    });
+
+    // Periodically check if password protection element still exists
+    setInterval(() => {
+        if (!document.getElementById('password-protection') && passwordProtection.style.display !== 'none') {
+            document.body.innerHTML = `
+                <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#171717; color:white; font-family:sans-serif; text-align:center; padding:20px;">
+                    <div>
+                        <h1 style="color:#ef4444; margin-bottom:20px;">Security Breach Detected</h1>
+                        <p>Unauthorized use is unlawful and prohibited</p>
+                        <p style="margin-top:20px; color:#9ca3af;">Page content has been locked due to security violations.</p>
+                    </div>
+                </div>
+            `;
+            document.body.style.overflow = 'hidden';
+            observer.disconnect();
+            throw new Error("Security breach detected");
+        }
+    }, 1000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+    "name": "sunsets-indicas/cannabis-magazine",
+    "description": "Sunsets & Indicas - Cannabis Magazine for Las Cruces, New Mexico",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sunsets & Indicas Team",
+            "email": "hello@sunsetsandindicas.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SunsetsIndicas\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SunsetsIndicas\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "serve": "php -S localhost:8000 index.php"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+
+
