@@ -6,13 +6,12 @@
     <title>Sunsets & Indicas - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-      body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-      .modal { display:none; position: fixed; inset: 0; background: rgba(0,0,0,.5); align-items: center; justify-content: center; z-index: 50; }
+      body { font-family: Inter, system-ui, sans-serif; }
+      .modal { display:none; position: fixed; inset: 0; background: rgba(0,0,0,.5); align-items: center; justify-content: center; z-index: 50; overflow-y: auto; }
       .show { display:flex; }
+      .drag-over { background-color: rgba(16, 185, 129, 0.1) !important; border-color: #10b981 !important; }
     </style>
     <script>
       tailwind.config = {
@@ -62,7 +61,6 @@
 
   <!-- Main -->
   <main id="main" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 hidden">
-    <!-- Actions -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
       <div>
         <h2 class="text-xl font-semibold">Content</h2>
@@ -74,7 +72,6 @@
       </div>
     </div>
 
-    <!-- Lists -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <section class="bg-white border border-gray-200 rounded-xl p-4">
         <div class="flex items-center justify-between mb-3">
@@ -93,48 +90,74 @@
     </div>
   </main>
 
-  <!-- Create Blog Modal -->
+  <!-- Create Blog Modal (Advanced Editor) -->
   <div id="blogModal" class="modal">
-    <div class="bg-white w-full max-w-xl rounded-xl shadow-xl p-6">
+    <div class="bg-white w-full max-w-4xl rounded-xl shadow-xl p-6 my-8 mx-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="font-semibold text-lg">Create Blog</h3>
+        <h3 class="font-semibold text-lg">Create Blog Post</h3>
         <button data-close="blogModal" class="text-gray-500 hover:text-gray-700"><i class="fa fa-times"></i></button>
       </div>
-      <form id="blogForm" class="grid gap-3">
+      <form id="blogForm" class="grid gap-4">
+        <!-- Featured Image Upload -->
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Title</label>
-          <input id="b_title" class="w-full border rounded-md px-3 py-2" required>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Featured Image</label>
+          <div id="uploadArea" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition">
+            <div class="text-gray-400 mb-2"><i class="fas fa-cloud-upload-alt fa-3x"></i></div>
+            <p class="text-gray-600 mb-1">Drag & drop your image here or click to browse</p>
+            <p class="text-xs text-gray-400">Recommended: 1200x630px (JPG, PNG)</p>
+            <input type="file" id="featuredImage" accept="image/*" class="hidden">
+          </div>
+          <div id="uploadPreview" class="hidden mt-3 flex items-center gap-3 p-3 border rounded-lg">
+            <img id="previewImg" class="h-20 w-20 object-cover rounded">
+            <div class="flex-1">
+              <p id="previewName" class="text-sm font-medium"></p>
+              <p id="previewSize" class="text-xs text-gray-500"></p>
+              <button type="button" id="changeImageBtn" class="text-xs text-emerald-600 hover:underline mt-1">Change Image</button>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-sm text-gray-600 mb-1">Description</label>
-          <textarea id="b_desc" class="w-full border rounded-md px-3 py-2" rows="3" required></textarea>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+        <!-- Blog Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Image URL</label>
-            <input id="b_image" class="w-full border rounded-md px-3 py-2" placeholder="https://...">
+            <label class="block text-sm text-gray-600 mb-1">Title*</label>
+            <input id="b_title" class="w-full border rounded-md px-3 py-2" required>
           </div>
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Redirect URL</label>
-            <input id="b_redirect" class="w-full border rounded-md px-3 py-2" placeholder="/main/blogs/example.html or https://...">
+            <label class="block text-sm text-gray-600 mb-1">Button Text</label>
+            <input id="b_btn" class="w-full border rounded-md px-3 py-2" value="Read More">
           </div>
         </div>
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Button Text</label>
-          <input id="b_btn" class="w-full border rounded-md px-3 py-2" value="Read">
+          <label class="block text-sm text-gray-600 mb-1">Description*</label>
+          <textarea id="b_desc" class="w-full border rounded-md px-3 py-2" rows="2" required></textarea>
         </div>
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" data-close="blogModal" class="px-3 py-2 border rounded-md">Cancel</button>
-          <button type="submit" class="px-4 py-2 rounded-md bg-emerald-500 text-white">Publish</button>
+
+        <!-- Content Editor -->
+        <div class="border-t pt-4">
+          <div class="flex justify-between items-center mb-3">
+            <label class="block text-sm font-medium text-gray-700">Blog Content</label>
+            <div class="flex gap-2">
+              <button type="button" id="addTextBtn" class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-md"><i class="fas fa-paragraph mr-1"></i>Add Text</button>
+              <button type="button" id="addImageBtn" class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-md"><i class="fas fa-image mr-1"></i>Add Image</button>
+            </div>
+          </div>
+          <div id="contentBlocks" class="space-y-3"></div>
+          <p class="text-xs text-gray-500 mt-2">Build your blog by adding text and image blocks</p>
         </div>
-        <p id="b_msg" class="text-sm text-gray-500"></p>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t">
+          <button type="button" data-close="blogModal" class="px-4 py-2 border rounded-md hover:bg-gray-50">Cancel</button>
+          <button type="submit" id="createBlogBtn" class="px-5 py-2 rounded-md bg-emerald-500 text-white hover:bg-emerald-600">Create Blog</button>
+        </div>
+        <p id="b_msg" class="text-sm text-gray-500 text-center"></p>
       </form>
     </div>
   </div>
 
-  <!-- Create Issue Modal -->
+  <!-- Create Issue Modal (Simple) -->
   <div id="issueModal" class="modal">
-    <div class="bg-white w-full max-w-xl rounded-xl shadow-xl p-6">
+    <div class="bg-white w-full max-w-xl rounded-xl shadow-xl p-6 mx-4">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-semibold text-lg">Create Issue</h3>
         <button data-close="issueModal" class="text-gray-500 hover:text-gray-700"><i class="fa fa-times"></i></button>
@@ -154,13 +177,13 @@
             <input id="i_image" class="w-full border rounded-md px-3 py-2" placeholder="https://...">
           </div>
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Redirect URL</label>
-            <input id="i_redirect" class="w-full border rounded-md px-3 py-2" placeholder="/main/issues/test_issue.html or https://...">
+            <label class="block text-sm text-gray-600 mb-1">Button Text</label>
+            <input id="i_btn" class="w-full border rounded-md px-3 py-2" value="View">
           </div>
         </div>
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Button Text</label>
-          <input id="i_btn" class="w-full border rounded-md px-3 py-2" value="View">
+          <label class="block text-sm text-gray-600 mb-1">Redirect URL</label>
+          <input id="i_redirect" class="w-full border rounded-md px-3 py-2" placeholder="/main/issues/test_issue.html">
         </div>
         <div class="flex items-center justify-end gap-2 pt-2">
           <button type="button" data-close="issueModal" class="px-3 py-2 border rounded-md">Cancel</button>
@@ -171,18 +194,53 @@
     </div>
   </div>
 
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 hidden bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2">
+    <i id="toastIcon" class="fas fa-check-circle text-green-400"></i>
+    <span id="toastMsg"></span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
   (function(){
     const $ = (id) => document.getElementById(id);
-    const state = { email: null, password: null, role: null };
+    const state = { email: null, password: null, role: null, githubToken: '' };
+
+    // GitHub Config
+    const GITHUB = {
+      REPO: 'nicholasxdavis/Cannabis-Magazine',
+      BRANCH: 'main',
+      ASSETS_DIR: 'main/assets',
+      BLOGS_DIR: 'main/blogs'
+    };
+
+    // Fetch GitHub token
+    async function loadGitHubToken() {
+      try {
+        const res = await fetch('https://raw.githubusercontent.com/nicholasxdavis/Cannabis-Magazine/main/admin/github_token.txt');
+        if (res.ok) {
+          const token = await res.text();
+          state.githubToken = token.replace(/\*/g, '').trim();
+        }
+      } catch (e) { console.warn('GitHub token not loaded:', e); }
+    }
+    loadGitHubToken();
 
     function b64(s){ return btoa(unescape(encodeURIComponent(s))); }
     function auth(){ return state.email && state.password ? { 'Authorization': 'Basic ' + b64(state.email + ':' + state.password) } : {}; }
+    
     async function api(path, opts={}){
       const res = await fetch(path, { ...opts, headers: { 'Content-Type':'application/json', ...(opts.headers||{}), ...auth() }});
       if(res.status === 401){ throw new Error('AUTH_REQUIRED'); }
       if(!res.ok){ const t = await res.text().catch(()=> ''); throw new Error(t || ('HTTP_'+res.status)); }
       const ct = res.headers.get('content-type')||''; return ct.includes('application/json') ? res.json() : res.text();
+    }
+
+    function showToast(msg, type='success'){
+      $('toastMsg').textContent = msg;
+      $('toastIcon').className = type==='error' ? 'fas fa-exclamation-circle text-red-400' : 'fas fa-check-circle text-green-400';
+      $('toast').classList.remove('hidden');
+      setTimeout(() => $('toast').classList.add('hidden'), 3000);
     }
 
     function setSignedIn(signedIn, email){
@@ -199,10 +257,96 @@
     }
 
     function saveCreds(){ localStorage.setItem('admin_email', state.email||''); localStorage.setItem('admin_password', state.password||''); }
-    function loadCreds(){ state.email = localStorage.getItem('admin_email')||''; state.password = localStorage.getItem('admin_password')||''; }
+    function loadCreds(){ state.email = localStorage.getItem('admin_email')||''; state.password = localStorage.getItem('admin_password')||''); }
     function clearCreds(){ state.email = state.password = state.role = null; localStorage.removeItem('admin_email'); localStorage.removeItem('admin_password'); }
 
-    // Render list item
+    // GitHub upload
+    async function uploadToGitHub(file, dir){
+      if(!state.githubToken){ throw new Error('GitHub token not available'); }
+      const fileName = `blog_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+      const path = `${dir}/${fileName}`;
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.onload = async () => {
+          try {
+            const base64 = reader.result.split(',')[1];
+            const res = await fetch(`https://api.github.com/repos/${GITHUB.REPO}/contents/${path}`, {
+              method: 'PUT',
+              headers: { 'Authorization': `token ${state.githubToken}`, 'Accept': 'application/vnd.github.v3+json' },
+              body: JSON.stringify({ message: `Upload ${fileName}`, content: base64, branch: GITHUB.BRANCH })
+            });
+            if (!res.ok) throw new Error('Upload failed');
+            const data = await res.json();
+            resolve(data.content.download_url);
+          } catch(err){ reject(err); }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Generate blog HTML
+    function generateBlogHTML(title, featuredImg, blocks){
+      const date = new Date();
+      const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const shortDate = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toUpperCase();
+      
+      let content = '';
+      blocks.forEach(b => {
+        if(b.type === 'text'){
+          content += `<p class="text-xl font-medium mb-8">${b.content}</p>\n`;
+        } else if(b.type === 'image'){
+          content += `<div class="mb-12 rounded-xl overflow-hidden shadow-lg"><img src="${b.url}" alt="${b.alt||''}" class="w-full h-auto object-cover">${b.credit? `<p class="text-xs mt-2">Photo: ${b.credit}</p>` : ''}</div>\n`;
+        }
+      });
+
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${title} | Sunsets & Indicas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+<header class="bg-white border-b">
+<div class="max-w-4xl mx-auto px-4 py-4"><a href="../index.html" class="text-emerald-600 font-semibold">← Back to Home</a></div>
+</header>
+<main class="max-w-4xl mx-auto px-4 py-12">
+<div class="text-center mb-8">
+<span class="inline-block bg-emerald-100 text-emerald-700 text-xs px-3 py-1 rounded-full mb-4">${shortDate}</span>
+<h1 class="text-4xl md:text-5xl font-bold mb-4">${title}</h1>
+<p class="text-gray-500">Published ${formattedDate}</p>
+</div>
+<img src="${featuredImg}" alt="${title}" class="w-full h-auto rounded-xl mb-8">
+<article class="prose prose-lg max-w-none">${content}</article>
+</main>
+<footer class="bg-gray-800 text-white py-8 mt-16">
+<div class="max-w-4xl mx-auto px-4 text-center">
+<p>&copy; 2025 Sunsets & Indicas. All rights reserved.</p>
+</div>
+</footer>
+</body>
+</html>`;
+    }
+
+    // Upload blog HTML to GitHub
+    async function uploadBlogHTML(title, html){
+      if(!state.githubToken){ throw new Error('GitHub token not available'); }
+      const fileName = `${title.toLowerCase().replace(/\s+/g, '_')}.html`;
+      const path = `${GITHUB.BLOGS_DIR}/${fileName}`;
+      const base64 = b64(html);
+      const res = await fetch(`https://api.github.com/repos/${GITHUB.REPO}/contents/${path}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `token ${state.githubToken}`, 'Accept': 'application/vnd.github.v3+json' },
+        body: JSON.stringify({ message: `Create blog: ${title}`, content: base64, branch: GITHUB.BRANCH })
+      });
+      if (!res.ok) throw new Error('Failed to create blog HTML');
+      return fileName;
+    }
+
+    // List items
     function listItem(entry, type){
       const li = document.createElement('li');
       li.className = 'flex items-center justify-between gap-3 border rounded-lg px-3 py-2';
@@ -245,61 +389,209 @@
     }
 
     // Auth
-    document.getElementById('authForm').addEventListener('submit', async (e)=>{
+    $('authForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      state.email = document.getElementById('email').value.trim();
-      state.password = document.getElementById('password').value;
-      document.getElementById('authMsg').textContent = '';
-      try {
-        if(document.getElementById('remember').checked){ saveCreds(); } else { saveCreds(); }
-        await me();
-      } catch(err){ document.getElementById('authMsg').textContent = 'Invalid credentials'; clearCreds(); }
+      state.email = $('email').value.trim(); state.password = $('password').value;
+      $('authMsg').textContent = '';
+      try { saveCreds(); await me(); }
+      catch(err){ $('authMsg').textContent = 'Invalid credentials'; clearCreds(); }
     });
-    document.getElementById('logoutBtn').addEventListener('click', ()=>{ clearCreds(); setSignedIn(false); });
+    $('logoutBtn').addEventListener('click', ()=>{ clearCreds(); setSignedIn(false); });
 
-    // Open/close modals
-    function openModal(id){ document.getElementById(id).classList.add('show'); }
-    function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+    // Modal management
+    function openModal(id){ $(id).classList.add('show'); }
+    function closeModal(id){ $(id).classList.remove('show'); }
     document.addEventListener('click', (e)=>{
       const btn = e.target.closest('[data-close]');
       if(btn){ closeModal(btn.getAttribute('data-close')); }
     });
 
-    document.getElementById('newBlogBtn').onclick = ()=> openModal('blogModal');
-    document.getElementById('newIssueBtn').onclick = ()=> openModal('issueModal');
+    $('newBlogBtn').onclick = ()=> { openModal('blogModal'); $('contentBlocks').innerHTML = ''; $('blogForm').reset(); $('uploadPreview').classList.add('hidden'); $('uploadArea').classList.remove('hidden'); };
+    $('newIssueBtn').onclick = ()=> openModal('issueModal');
+
+    // Featured image upload
+    const uploadArea = $('uploadArea');
+    const featuredInput = $('featuredImage');
+    uploadArea.onclick = ()=> featuredInput.click();
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+      uploadArea.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
+    });
+    ['dragenter', 'dragover'].forEach(evt => uploadArea.addEventListener(evt, ()=> uploadArea.classList.add('drag-over')));
+    ['dragleave', 'drop'].forEach(evt => uploadArea.addEventListener(evt, ()=> uploadArea.classList.remove('drag-over')));
+    uploadArea.addEventListener('drop', e => {
+      if(e.dataTransfer.files.length > 0){ featuredInput.files = e.dataTransfer.files; featuredInput.dispatchEvent(new Event('change')); }
+    });
+
+    featuredInput.addEventListener('change', e => {
+      if(e.target.files && e.target.files[0]){
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = ev => {
+          $('previewImg').src = ev.target.result;
+          $('previewName').textContent = file.name;
+          $('previewSize').textContent = `${(file.size/1024).toFixed(1)} KB`;
+          $('uploadArea').classList.add('hidden');
+          $('uploadPreview').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    $('changeImageBtn').onclick = () => { $('uploadPreview').classList.add('hidden'); $('uploadArea').classList.remove('hidden'); featuredInput.value = ''; };
+
+    // Content blocks
+    $('addTextBtn').onclick = () => {
+      const id = 'block-' + Date.now();
+      const html = `<div class="content-block border rounded-lg p-3" data-type="text" id="${id}">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-medium">Text Block</span>
+          <div class="flex gap-2">
+            <button type="button" class="move-up text-gray-500 hover:text-gray-700" data-id="${id}"><i class="fas fa-arrow-up"></i></button>
+            <button type="button" class="move-down text-gray-500 hover:text-gray-700" data-id="${id}"><i class="fas fa-arrow-down"></i></button>
+            <button type="button" class="delete-block text-red-500 hover:text-red-700" data-id="${id}"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="content-text border rounded p-2 bg-gray-50 min-h-[100px]" contenteditable="true"></div>
+      </div>`;
+      $('contentBlocks').insertAdjacentHTML('beforeend', html);
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    };
+
+    $('addImageBtn').onclick = () => {
+      const id = 'block-' + Date.now();
+      const html = `<div class="content-block border rounded-lg p-3" data-type="image" id="${id}">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-medium">Image Block</span>
+          <div class="flex gap-2">
+            <button type="button" class="move-up text-gray-500 hover:text-gray-700" data-id="${id}"><i class="fas fa-arrow-up"></i></button>
+            <button type="button" class="move-down text-gray-500 hover:text-gray-700" data-id="${id}"><i class="fas fa-arrow-down"></i></button>
+            <button type="button" class="delete-block text-red-500 hover:text-red-700" data-id="${id}"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        <div class="img-upload-area border-2 border-dashed rounded p-4 text-center cursor-pointer hover:border-gray-400">
+          <i class="fas fa-cloud-upload-alt text-gray-400 text-2xl mb-2"></i>
+          <p class="text-sm text-gray-600">Click to upload image</p>
+          <input type="file" class="hidden img-file-input" accept="image/*">
+        </div>
+        <div class="img-preview hidden mt-2">
+          <img class="img-content w-full rounded">
+          <input type="text" class="img-credit mt-2 w-full border rounded px-2 py-1 text-sm" placeholder="Photo credit (optional)">
+        </div>
+      </div>`;
+      $('contentBlocks').insertAdjacentHTML('beforeend', html);
+      
+      const block = document.getElementById(id);
+      const area = block.querySelector('.img-upload-area');
+      const input = block.querySelector('.img-file-input');
+      const preview = block.querySelector('.img-preview');
+      const img = block.querySelector('.img-content');
+      
+      area.onclick = ()=> input.click();
+      input.addEventListener('change', e => {
+        if(e.target.files && e.target.files[0]){
+          const reader = new FileReader();
+          reader.onload = ev => {
+            img.src = ev.target.result;
+            area.classList.add('hidden');
+            preview.classList.remove('hidden');
+            block.fileObj = e.target.files[0];
+          };
+          reader.readAsDataURL(e.target.files[0]);
+        }
+      });
+      block.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    $('contentBlocks').addEventListener('click', e => {
+      if(e.target.closest('.move-up')){
+        const id = e.target.closest('.move-up').getAttribute('data-id');
+        const block = document.getElementById(id);
+        if(block.previousElementSibling) $('contentBlocks').insertBefore(block, block.previousElementSibling);
+      } else if(e.target.closest('.move-down')){
+        const id = e.target.closest('.move-down').getAttribute('data-id');
+        const block = document.getElementById(id);
+        if(block.nextElementSibling) $('contentBlocks').insertBefore(block.nextElementSibling, block);
+      } else if(e.target.closest('.delete-block')){
+        const id = e.target.closest('.delete-block').getAttribute('data-id');
+        if(confirm('Delete this block?')) document.getElementById(id).remove();
+      }
+    });
 
     // Create blog
-    document.getElementById('blogForm').addEventListener('submit', async (e)=>{
+    $('blogForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      document.getElementById('b_msg').textContent = '';
-      try{
-        const payload = { title: document.getElementById('b_title').value, description: document.getElementById('b_desc').value, image: document.getElementById('b_image').value, redirect: document.getElementById('b_redirect').value, buttonText: document.getElementById('b_btn').value || 'Read' };
-        await api('/api/blogs', { method:'POST', body: JSON.stringify(payload) });
-        document.getElementById('b_msg').textContent = 'Published';
+      const btn = $('createBlogBtn');
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+      $('b_msg').textContent = '';
+
+      try {
+        const title = $('b_title').value;
+        const desc = $('b_desc').value;
+        const btnText = $('b_btn').value || 'Read More';
+
+        if(!featuredInput.files || featuredInput.files.length === 0){ throw new Error('Please upload a featured image'); }
+
+        // Upload featured image
+        showToast('Uploading featured image...');
+        const featuredUrl = await uploadToGitHub(featuredInput.files[0], GITHUB.ASSETS_DIR);
+
+        // Process content blocks
+        const blocks = [];
+        const blockEls = document.querySelectorAll('.content-block');
+        for(const el of blockEls){
+          const type = el.getAttribute('data-type');
+          if(type === 'text'){
+            blocks.push({ type: 'text', content: el.querySelector('.content-text').innerHTML });
+          } else if(type === 'image' && el.fileObj){
+            showToast('Uploading content image...');
+            const url = await uploadToGitHub(el.fileObj, GITHUB.ASSETS_DIR);
+            const credit = el.querySelector('.img-credit').value;
+            blocks.push({ type: 'image', url, alt: el.fileObj.name, credit });
+          }
+        }
+
+        if(blocks.length === 0){ throw new Error('Add at least one content block'); }
+
+        // Generate and upload HTML
+        showToast('Creating blog page...');
+        const html = generateBlogHTML(title, featuredUrl, blocks);
+        const fileName = await uploadBlogHTML(title, html);
+
+        // Create blog entry in API
+        const redirect = `/main/blogs/${fileName}`;
+        await api('/api/blogs', { method:'POST', body: JSON.stringify({ title, description: desc, image: featuredUrl, redirect, buttonText: btnText }) });
+
+        showToast('Blog created successfully!');
         closeModal('blogModal');
         await loadBlogs();
-      } catch(err){ document.getElementById('b_msg').textContent = 'Failed to publish'; }
+      } catch(err){
+        $('b_msg').textContent = 'Error: ' + err.message;
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Create Blog';
+      }
     });
 
     // Create issue
-    document.getElementById('issueForm').addEventListener('submit', async (e)=>{
+    $('issueForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
-      document.getElementById('i_msg').textContent = '';
+      $('i_msg').textContent = '';
       try{
-        const payload = { title: document.getElementById('i_title').value, description: document.getElementById('i_desc').value, image: document.getElementById('i_image').value, redirect: document.getElementById('i_redirect').value, buttonText: document.getElementById('i_btn').value || 'View' };
+        const payload = { title: $('i_title').value, description: $('i_desc').value, image: $('i_image').value, redirect: $('i_redirect').value, buttonText: $('i_btn').value || 'View' };
         await api('/api/issues', { method:'POST', body: JSON.stringify(payload) });
-        document.getElementById('i_msg').textContent = 'Published';
+        $('i_msg').textContent = 'Published';
+        showToast('Issue published!');
         closeModal('issueModal');
         await loadIssues();
-      } catch(err){ document.getElementById('i_msg').textContent = 'Failed (admin only)'; }
+      } catch(err){ $('i_msg').textContent = 'Failed (admin only)'; showToast('Failed to publish issue', 'error'); }
     });
 
-    // Initial auto-login if stored
+    // Init
     loadCreds();
     if(state.email && state.password){ me().catch(()=>{}); }
-
-    document.getElementById('refreshBlogs').onclick = loadBlogs;
-    document.getElementById('refreshIssues').onclick = loadIssues;
+    $('refreshBlogs').onclick = loadBlogs;
+    $('refreshIssues').onclick = loadIssues;
   })();
   </script>
 </body>
