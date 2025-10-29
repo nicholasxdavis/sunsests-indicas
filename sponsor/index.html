@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sponsor Panel | Sunsets & Indicas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica:ital@0;1&display=swap" rel="stylesheet">
+    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['IM Fell Double Pica','serif'],display:['IM Fell Double Pica','serif']}}}}</script>
+</head>
+<body class="bg-paper text-primary font-sans">
+    <div class="max-w-3xl mx-auto p-6">
+        <h1 class="text-3xl font-display font-bold mb-4">Sponsor Panel</h1>
+
+        <div class="bg-white rounded-lg border p-4 mb-6">
+            <h2 class="font-display font-bold mb-2">Login</h2>
+            <div class="grid md:grid-cols-2 gap-3">
+                <input id="email" class="border p-2 rounded" placeholder="Email">
+                <input id="pass" type="password" class="border p-2 rounded" placeholder="Password">
+            </div>
+            <p class="text-sm text-primary/70 mt-2">Use the credentials you received from admin.</p>
+        </div>
+
+        <div id="profile" class="bg-white rounded-lg border p-4 mb-6 hidden"></div>
+
+        <div class="bg-white rounded-lg border p-4">
+            <h2 class="font-display font-bold mb-3">Post Blog</h2>
+            <div class="space-y-2">
+                <input id="bTitle" class="w-full border p-2 rounded" placeholder="Title">
+                <textarea id="bDesc" class="w-full border p-2 rounded" placeholder="Description"></textarea>
+                <input id="bImage" class="w-full border p-2 rounded" placeholder="Image URL (GitHub/CDN)">
+                <input id="bRedirect" class="w-full border p-2 rounded" placeholder="Redirect URL">
+                <input id="bButton" class="w-full border p-2 rounded" placeholder="Button Text (default Read)">
+                <button id="createBlog" class="bg-accent text-white px-4 py-2 rounded">Publish Blog</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+function authHeader() {
+  const e = document.getElementById('email').value;
+  const p = document.getElementById('pass').value;
+  if (!e || !p) return {};
+  return { 'Authorization': 'Basic ' + btoa(e + ':' + p) };
+}
+
+async function loadProfile() {
+  const res = await fetch('/api/me', { headers: authHeader() });
+  const box = document.getElementById('profile');
+  if (!res.ok) { box.classList.add('hidden'); return; }
+  const me = await res.json();
+  box.classList.remove('hidden');
+  const s = me.sponsor;
+  box.innerHTML = `<div>
+    <h3 class=\"font-display font-bold\">Welcome, ${me.email}</h3>
+    ${s ? `<p class=\"text-sm text-primary/70\">Company: ${s.company_name} • Package: ${s.package}</p>` : ''}
+  </div>`;
+}
+
+document.getElementById('email').addEventListener('input', loadProfile);
+document.getElementById('pass').addEventListener('input', loadProfile);
+
+document.getElementById('createBlog').addEventListener('click', async () => {
+  const payload = {
+    title: document.getElementById('bTitle').value,
+    description: document.getElementById('bDesc').value,
+    image: document.getElementById('bImage').value,
+    redirect: document.getElementById('bRedirect').value,
+    buttonText: document.getElementById('bButton').value || 'Read'
+  };
+  const res = await fetch('/api/blogs', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: JSON.stringify(payload) });
+  if (res.ok) alert('Blog published'); else alert('Failed to publish');
+});
+</script>
+</body>
+</html>
+
+

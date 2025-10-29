@@ -68,6 +68,28 @@ function ensureTables(PDO $pdo): void {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
+
+    // user and sponsor profile tables (may already exist if init.php ran)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS users (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role ENUM('admin','sponsor') NOT NULL DEFAULT 'sponsor',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS sponsor_profiles (
+        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        user_id INT UNSIGNED NOT NULL,
+        company_name VARCHAR(255) NOT NULL,
+        package ENUM('elite','premium','standard') NOT NULL,
+        slug VARCHAR(255) UNIQUE NOT NULL,
+        logo_url VARCHAR(512) NULL,
+        status ENUM('active','inactive') DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX (user_id),
+        CONSTRAINT fk_sp_user_api FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 }
 
 ensureTables($pdo);
@@ -76,21 +98,56 @@ $uri = $_SERVER['REQUEST_URI'] ?? '/api';
 $path = parse_url($uri, PHP_URL_PATH);
 
 function jsonInput(): array {
-function requireAdmin(): void {
-    $adminUser = getenv('ADMIN_USER') ?: 'admin';
-    $adminPass = getenv('ADMIN_PASS') ?: 'admin';
-    $hdr = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
-    if (stripos($hdr, 'Basic ') !== 0) { http_response_code(401); header('WWW-Authenticate: Basic'); echo json_encode(['error'=>'AUTH_REQUIRED']); exit; }
-    $decoded = base64_decode(substr($hdr, 6));
-    if (!$decoded || strpos($decoded, ':') === false) { http_response_code(401); echo json_encode(['error'=>'AUTH_MALFORMED']); exit; }
-    list($u,$p) = explode(':', $decoded, 2);
-    if (!hash_equals($adminUser, $u) || !hash_equals($adminPass, $p)) { http_response_code(403); echo json_encode(['error'=>'FORBIDDEN']); exit; }
-}
-
     $raw = file_get_contents('php://input');
     if (!$raw) return [];
     $data = json_decode($raw, true);
     return is_array($data) ? $data : [];
+}
+
+function currentUser(PDO $pdo): array {
+    $adminUser = getenv('ADMIN_USER') ?: '';
+    $adminPass = getenv('ADMIN_PASS') ?: '';
+    $hdr = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    if (stripos($hdr, 'Basic ') !== 0) { return []; }
+    $decoded = base64_decode(substr($hdr, 6));
+    if (!$decoded || strpos($decoded, ':') === false) { return []; }
+    list($u,$p) = explode(':', $decoded, 2);
+    if ($adminUser && $adminPass && hash_equals($adminUser, $u) && hash_equals($adminPass, $p)) {
+        return ['role' => 'admin', 'id' => 0, 'email' => $u];
+    }
+    try {
+        $stmt = $pdo->prepare('SELECT id, email, password_hash, role FROM users WHERE email = :email LIMIT 1');
+        $stmt->execute([':email' => $u]);
+        $row = $stmt->fetch();
+        if ($row && password_verify($p, $row['password_hash'])) {
+            return ['role' => $row['role'], 'id' => (int)$row['id'], 'email' => $row['email']];
+        }
+    } catch (Throwable $e) {
+        return [];
+    }
+    return [];
+}
+
+function requireAdmin(PDO $pdo): array {
+    $u = currentUser($pdo);
+    if (($u['role'] ?? '') !== 'admin') {
+        http_response_code(401);
+        header('WWW-Authenticate: Basic');
+        echo json_encode(['error'=>'AUTH_REQUIRED']);
+        exit;
+    }
+    return $u;
+}
+
+function requireAdminOrSponsor(PDO $pdo): array {
+    $u = currentUser($pdo);
+    if (!in_array($u['role'] ?? '', ['admin','sponsor'], true)) {
+        http_response_code(401);
+        header('WWW-Authenticate: Basic');
+        echo json_encode(['error'=>'AUTH_REQUIRED']);
+        exit;
+    }
+    return $u;
 }
 
 if ($path === '/api/blogs' && $_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -105,9 +162,21 @@ if ($path === '/api/issues' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
-// Admin: create blog
+if ($path === '/api/me' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $u = currentUser($pdo);
+    if (!$u) { http_response_code(401); header('WWW-Authenticate: Basic'); echo json_encode(['error'=>'AUTH_REQUIRED']); exit; }
+    if (($u['role'] ?? '') === 'sponsor') {
+        $stmt = $pdo->prepare('SELECT company_name, package, slug, logo_url, status FROM sponsor_profiles WHERE user_id = :id LIMIT 1');
+        $stmt->execute([':id' => $u['id']]);
+        $u['sponsor'] = $stmt->fetch() ?: null;
+    }
+    echo json_encode($u);
+    exit;
+}
+
+// Admin or Sponsor: create blog
 if ($path === '/api/blogs' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    requireAdmin();
+    requireAdminOrSponsor($pdo);
     $data = jsonInput();
     $stmt = $pdo->prepare('INSERT INTO blogs (title, description, image, redirect, buttonText) VALUES (:title,:description,:image,:redirect,:buttonText)');
     $stmt->execute([
@@ -123,7 +192,7 @@ if ($path === '/api/blogs' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Admin: create issue
 if ($path === '/api/issues' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    requireAdmin();
+    requireAdmin($pdo);
     $data = jsonInput();
     $stmt = $pdo->prepare('INSERT INTO issues (title, description, image, redirect, buttonText) VALUES (:title,:description,:image,:redirect,:buttonText)');
     $stmt->execute([
@@ -139,7 +208,7 @@ if ($path === '/api/issues' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Admin: delete blog
 if ($path === '/api/blogs' && $_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    requireAdmin();
+    requireAdmin($pdo);
     $id = (int)($_GET['id'] ?? 0);
     if ($id <= 0) { http_response_code(422); echo json_encode(['error'=>'INVALID_ID']); exit; }
     $stmt = $pdo->prepare('DELETE FROM blogs WHERE id = :id');
@@ -150,7 +219,7 @@ if ($path === '/api/blogs' && $_SERVER['REQUEST_METHOD'] === 'DELETE') {
 
 // Admin: delete issue
 if ($path === '/api/issues' && $_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    requireAdmin();
+    requireAdmin($pdo);
     $id = (int)($_GET['id'] ?? 0);
     if ($id <= 0) { http_response_code(422); echo json_encode(['error'=>'INVALID_ID']); exit; }
     $stmt = $pdo->prepare('DELETE FROM issues WHERE id = :id');
@@ -200,6 +269,57 @@ if ($path === '/api/sponsor/apply' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         ':status' => 'pending',
     ]);
     echo json_encode(['ok' => true]);
+    exit;
+}
+
+// Contact submission (store server-side; can be extended to GitHub via GITHUBKEY)
+if ($path === '/api/contact' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $d = jsonInput();
+    $name = trim($d['name'] ?? '');
+    $email = trim($d['email'] ?? '');
+    $message = trim($d['message'] ?? '');
+    if (!$name || !filter_var($email, FILTER_VALIDATE_EMAIL) || !$message) { http_response_code(422); echo json_encode(['error'=>'INVALID_INPUT']); exit; }
+    // Persist locally to newsletter_subscriptions or create a dedicated table if desired.
+    // Minimal persistence: insert into newsletter_subscriptions if email new and ignore otherwise.
+    try {
+        $pdo->prepare('INSERT IGNORE INTO newsletter_subscriptions (email) VALUES (:email)')->execute([':email'=>$email]);
+    } catch (Throwable $e) {}
+    // Optionally, write to GitHub if GITHUBKEY is present (not required for now):
+    echo json_encode(['ok'=>true]);
+    exit;
+}
+
+// Admin: create user and optional sponsor profile
+if ($path === '/api/admin/users' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireAdmin($pdo);
+    $d = jsonInput();
+    $email = trim($d['email'] ?? '');
+    $password = (string)($d['password'] ?? '');
+    $role = in_array(($d['role'] ?? ''), ['admin','sponsor'], true) ? $d['role'] : 'sponsor';
+    if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 3) {
+        http_response_code(422); echo json_encode(['error'=>'INVALID_INPUT']); exit;
+    }
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, role) VALUES (:email,:hash,:role)');
+    $stmt->execute([':email'=>$email, ':hash'=>$hash, ':role'=>$role]);
+    $userId = (int)$pdo->lastInsertId();
+    if ($role === 'sponsor') {
+        $company = trim($d['companyName'] ?? '');
+        $package = in_array(($d['package'] ?? ''), ['elite','premium','standard'], true) ? $d['package'] : 'standard';
+        $slug = trim($d['slug'] ?? strtolower(preg_replace('/[^a-z0-9]+/','-', $company)));
+        if (!$company || !$slug) { http_response_code(422); echo json_encode(['error'=>'INVALID_SPONSOR']); exit; }
+        $logo = trim($d['logoUrl'] ?? '');
+        $sp = $pdo->prepare('INSERT INTO sponsor_profiles (user_id, company_name, package, slug, logo_url) VALUES (:uid,:company,:package,:slug,:logo)');
+        $sp->execute([':uid'=>$userId, ':company'=>$company, ':package'=>$package, ':slug'=>$slug, ':logo'=>$logo]);
+    }
+    echo json_encode(['ok'=>true, 'id'=>$userId]);
+    exit;
+}
+
+if ($path === '/api/admin/sponsors' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    requireAdmin($pdo);
+    $stmt = $pdo->query('SELECT u.id as user_id, u.email, s.company_name, s.package, s.slug, s.logo_url, s.status FROM sponsor_profiles s JOIN users u ON u.id = s.user_id ORDER BY s.created_at DESC');
+    echo json_encode($stmt->fetchAll());
     exit;
 }
 
