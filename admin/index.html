@@ -1,6 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Sunsets & Indicas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica:ital@0;1&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { colors: { primary:'#a56ab8', dark:'#171717' }, fontFamily:{ sans:['IM Fell Double Pica','serif'], display:['IM Fell Double Pica','serif'] }}} }
+  </script>
+</head>
+<body class="bg-gray-50 text-dark font-sans">
+  <div class="max-w-6xl mx-auto p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-display font-bold">Admin Dashboard</h1>
+      <div class="flex gap-2">
+        <input id="adminUser" class="border p-2 rounded text-sm" placeholder="Admin Email">
+        <input id="adminPass" type="password" class="border p-2 rounded text-sm" placeholder="Admin Password">
+        <button id="authCheck" class="bg-primary text-white px-3 py-2 rounded text-sm">Connect</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white border rounded-lg p-4"><div class="text-sm text-gray-500">Blogs</div><div id="statBlogs" class="text-2xl font-display">-</div></div>
+      <div class="bg-white border rounded-lg p-4"><div class="text-sm text-gray-500">Issues</div><div id="statIssues" class="text-2xl font-display">-</div></div>
+      <div class="bg-white border rounded-lg p-4"><div class="text-sm text-gray-500">Sponsors</div><div id="statSponsors" class="text-2xl font-display">-</div></div>
+      <div class="bg-white border rounded-lg p-4"><div class="text-sm text-gray-500">You</div><div id="statMe" class="text-xs break-all">Not connected</div></div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="bg-white border rounded-lg p-4">
+        <h2 class="font-display font-bold mb-3">Create Blog</h2>
+        <div class="space-y-2">
+          <input id="bTitle" class="w-full border p-2 rounded" placeholder="Title">
+          <textarea id="bDesc" class="w-full border p-2 rounded" placeholder="Description"></textarea>
+          <input id="bImage" class="w-full border p-2 rounded" placeholder="Image URL (GitHub/CDN)">
+          <input id="bRedirect" class="w-full border p-2 rounded" placeholder="Redirect URL">
+          <input id="bButton" class="w-full border p-2 rounded" placeholder="Button Text (default Read)">
+          <button id="createBlog" class="bg-primary text-white px-4 py-2 rounded">Publish Blog</button>
+        </div>
+      </div>
+
+      <div class="bg-white border rounded-lg p-4">
+        <h2 class="font-display font-bold mb-3">Create Issue</h2>
+        <div class="space-y-2">
+          <input id="iTitle" class="w-full border p-2 rounded" placeholder="Title">
+          <textarea id="iDesc" class="w-full border p-2 rounded" placeholder="Description"></textarea>
+          <input id="iImage" class="w-full border p-2 rounded" placeholder="Image URL (GitHub/CDN)">
+          <input id="iRedirect" class="w-full border p-2 rounded" placeholder="Redirect URL">
+          <input id="iButton" class="w-full border p-2 rounded" placeholder="Button Text (default View)">
+          <button id="createIssue" class="bg-primary text-white px-4 py-2 rounded">Publish Issue</button>
+        </div>
+      </div>
+
+      <div class="bg-white border rounded-lg p-4">
+        <h2 class="font-display font-bold mb-3">Create User / Sponsor</h2>
+        <div class="grid md:grid-cols-2 gap-3 mb-3">
+          <input id="uEmail" class="border p-2 rounded" placeholder="Email">
+          <input id="uPass" class="border p-2 rounded" placeholder="Password">
+          <select id="uRole" class="border p-2 rounded"><option value="sponsor">Sponsor</option><option value="admin">Admin</option></select>
+          <input id="spCompany" class="border p-2 rounded" placeholder="Company Name (sponsor)">
+          <select id="spPackage" class="border p-2 rounded"><option value="standard">Standard</option><option value="premium">Premium</option><option value="elite">Elite</option></select>
+          <input id="spSlug" class="border p-2 rounded" placeholder="Custom URL Slug (sponsor)">
+          <input id="spLogo" class="border p-2 rounded" placeholder="Logo URL (sponsor)">
+        </div>
+        <button id="createUser" class="bg-dark text-white px-4 py-2 rounded">Create User</button>
+      </div>
+
+      <div class="bg-white border rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2"><h2 class="font-display font-bold">Sponsors</h2><button id="refreshSponsors" class="text-sm underline">Refresh</button></div>
+        <ul id="sponsorsList" class="space-y-2 text-sm"></ul>
+      </div>
+
+      <div class="bg-white border rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2"><h2 class="font-display font-bold">Blogs</h2><button id="refreshBlogs" class="text-sm underline">Refresh</button></div>
+        <ul id="blogsList" class="space-y-2 text-sm"></ul>
+      </div>
+
+      <div class="bg-white border rounded-lg p-4">
+        <div class="flex items-center justify-between mb-2"><h2 class="font-display font-bold">Issues</h2><button id="refreshIssues" class="text-sm underline">Refresh</button></div>
+        <ul id="issuesList" class="space-y-2 text-sm"></ul>
+      </div>
+    </div>
+  </div>
+
+<script>
+function authHeader() {
+  const u = document.getElementById('adminUser').value;
+  const p = document.getElementById('adminPass').value;
+  if (!u || !p) return {};
+  return { 'Authorization': 'Basic ' + btoa(u + ':' + p) };
+}
+
+async function getJson(path, opts = {}) {
+  const res = await fetch(path, opts);
+  if (!res.ok) return null;
+  try { return await res.json(); } catch { return null; }
+}
+
+async function updateStats() {
+  const blogs = await getJson('/api/blogs');
+  const issues = await getJson('/api/issues');
+  const sponsors = await fetch('/api/admin/sponsors', { headers: authHeader() }).then(r => r.ok ? r.json() : []);
+  const me = await fetch('/api/me', { headers: authHeader() }).then(r => r.ok ? r.json() : null);
+  document.getElementById('statBlogs').textContent = Array.isArray(blogs) ? blogs.length : '-';
+  document.getElementById('statIssues').textContent = Array.isArray(issues) ? issues.length : '-';
+  document.getElementById('statSponsors').textContent = Array.isArray(sponsors) ? sponsors.length : '-';
+  document.getElementById('statMe').textContent = me ? (me.email + ' • ' + me.role) : 'Not connected';
+}
+
+async function create(path, body) {
+  const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: JSON.stringify(body) });
+  if (!res.ok) { const t = await res.text(); alert('Error: ' + t); return false; }
+  return true;
+}
+
+document.getElementById('authCheck').addEventListener('click', updateStats);
+
+document.getElementById('createBlog').addEventListener('click', async () => {
+  const payload = { title: bTitle.value, description: bDesc.value, image: bImage.value, redirect: bRedirect.value, buttonText: bButton.value || 'Read' };
+  if (await create('/api/blogs', payload)) { alert('Blog published'); loadBlogs(); updateStats(); }
+});
+
+document.getElementById('createIssue').addEventListener('click', async () => {
+  const payload = { title: iTitle.value, description: iDesc.value, image: iImage.value, redirect: iRedirect.value, buttonText: iButton.value || 'View' };
+  if (await create('/api/issues', payload)) { alert('Issue published'); loadIssues(); updateStats(); }
+});
+
+document.getElementById('createUser').addEventListener('click', async () => {
+  const payload = { email: uEmail.value, password: uPass.value, role: uRole.value, companyName: spCompany.value, package: spPackage.value, slug: spSlug.value, logoUrl: spLogo.value };
+  const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: JSON.stringify(payload) });
+  if (res.ok) { alert('User created'); loadSponsors(); updateStats(); } else { alert('Create failed'); }
+});
+
+async function loadBlogs() {
+  const ul = blogsList; ul.innerHTML = 'Loading...';
+  const data = await getJson('/api/blogs');
+  if (!Array.isArray(data)) { ul.innerHTML = 'Failed to load blogs'; return; }
+  ul.innerHTML = '';
+  data.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'flex items-center justify-between border-b py-1';
+    li.innerHTML = `<span>${item.title}</span><button data-id="${item.id}" class="delBlog text-red-600">Delete</button>`;
+    ul.appendChild(li);
+  });
+  ul.querySelectorAll('.delBlog').forEach(btn => btn.addEventListener('click', async (e) => {
+    const id = e.target.getAttribute('data-id');
+    const res = await fetch('/api/blogs?id=' + id, { method: 'DELETE', headers: authHeader() });
+    if (res.ok) { loadBlogs(); updateStats(); } else { alert('Delete failed'); }
+  }));
+}
+
+async function loadIssues() {
+  const ul = issuesList; ul.innerHTML = 'Loading...';
+  const data = await getJson('/api/issues');
+  if (!Array.isArray(data)) { ul.innerHTML = 'Failed to load issues'; return; }
+  ul.innerHTML = '';
+  data.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'flex items-center justify-between border-b py-1';
+    li.innerHTML = `<span>${item.title}</span><button data-id="${item.id}" class="delIssue text-red-600">Delete</button>`;
+    ul.appendChild(li);
+  });
+  ul.querySelectorAll('.delIssue').forEach(btn => btn.addEventListener('click', async (e) => {
+    const id = e.target.getAttribute('data-id');
+    const res = await fetch('/api/issues?id=' + id, { method: 'DELETE', headers: authHeader() });
+    if (res.ok) { loadIssues(); updateStats(); } else { alert('Delete failed'); }
+  }));
+}
+
+async function loadSponsors() {
+  const ul = sponsorsList; ul.innerHTML = 'Loading...';
+  const r = await fetch('/api/admin/sponsors', { headers: authHeader() });
+  if (!r.ok) { ul.innerHTML = r.status === 401 ? 'Enter admin credentials and click Connect.' : 'Failed to load sponsors'; return; }
+  let data = []; try { data = await r.json(); } catch { ul.innerHTML = 'Failed to parse'; return; }
+  if (!Array.isArray(data)) { ul.innerHTML = 'No sponsors yet.'; return; }
+  ul.innerHTML = '';
+  data.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'flex items-center justify-between border-b py-1';
+    li.innerHTML = `<span>${item.company_name} (${item.package})</span><span class="text-gray-500">${item.email}</span>`;
+    ul.appendChild(li);
+  });
+}
+
+document.getElementById('refreshBlogs').addEventListener('click', loadBlogs);
+document.getElementById('refreshIssues').addEventListener('click', loadIssues);
+document.getElementById('refreshSponsors').addEventListener('click', loadSponsors);
+
+updateStats();
+loadBlogs();
+loadIssues();
+loadSponsors();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin | Sunsets & Indicas</title>
