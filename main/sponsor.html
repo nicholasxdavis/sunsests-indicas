@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sponsorships | Sunsets & Indicas</title>
+    <meta name="description" content="Sponsorship packages and perks for Sunsets & Indicas.">
+    <link rel="icon" type="image/png" href="img/new-logo.png">
+    <link rel="apple-touch-icon" href="img/new-logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica:ital@0;1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0a0a0a',
+                        secondary: '#f5f5f5',
+                        accent: '#a56ab8',
+                        lightaccent: '#c48dd1',
+                        darkaccent: '#1a1a1a',
+                        paper: '#f0eee6',
+                        button: '#3a7d44',
+                    },
+                    fontFamily: {
+                        sans: ['IM Fell Double Pica', 'serif'],
+                        display: ['IM Fell Double Pica', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-paper text-primary font-sans antialiased leading-relaxed">
+    <!-- Header -->
+    <header class="fixed w-full z-40 bg-paper/90 backdrop-blur-md border-b border-primary/10">
+        <div class="container mx-auto px-5 py-4 flex justify-between items-center">
+            <a href="index.html">
+                <img src="img/new-logo.png" alt="Sunsets & Indicas Logo" class="h-20">
+            </a>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="index.html" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Home</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a href="issues.html" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Latest</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a href="blogs.html" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Blogs</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a href="index.html#merch" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Merch</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a href="contact.html" class="font-medium hover:text-accent transition flex items-center group">
+                    <span class="group-hover:underline">Contact</span>
+                    <span class="ml-1 text-xs opacity-0 group-hover:opacity-100 transition">→</span>
+                </a>
+                <a id="read-latest-header-btn" href="#" class="bg-button hover:bg-button/90 text-paper font-display font-bold py-2 px-5 rounded-full text-sm transition transform hover:scale-105">
+                    READ LATEST
+                </a>
+            </nav>
+            <button id="mobile-menu-button" class="md:hidden text-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed inset-0 z-30 bg-paper hidden pt-24 px-5">
+        <div class="flex flex-col space-y-6 text-2xl">
+            <a href="index.html#" class="font-display font-bold border-b border-primary/10 pb-3">Homepage</a>
+            <a href="issues.html" class="font-display font-bold border-b border-primary/10 pb-3">Latest Issue</a>
+            <a href="blogs.html" class="font-display font-bold border-b border-primary/10 pb-3">Latest Blogs</a>
+            <a href="index.html#merch" class="font-display font-bold border-b border-primary/10 pb-3">Merch Store</a>
+            <a href="contact.html" class="font-display font-bold border-b border-primary/10 pb-3">Contact Us</a>
+            <a id="read-latest-mobile-btn" href="#" class="inline-flex items-center justify-center bg-button hover:bg-button/90 text-paper font-display font-bold py-3 px-6 rounded-full text-base transition transform hover:scale-105">
+                READ LATEST
+            </a>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="pt-36 pb-14 px-5 bg-gradient-to-r from-accent/10 to-lightaccent/10 border-b border-primary/10">
+        <div class="container mx-auto max-w-5xl text-center">
+            <div class="inline-block bg-accent/20 text-accent font-mono text-xs px-3 py-1 rounded-full mb-4">Sponsorship Benefits</div>
+            <h1 class="text-4xl md:text-5xl font-display font-bold mb-4">Partner with <span class="text-accent">Sunsets & Indicas</span></h1>
+            <p class="text-lg opacity-90 max-w-3xl mx-auto">
+                No lock-ins. No contracts. First-come, first-served. Pick the tier that fits your goals and start reaching our community.
+            </p>
+        </div>
+    </section>
+
+    <!-- Packages -->
+    <section class="py-14 px-5">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Elite -->
+                <div class="bg-white rounded-xl border border-accent/20 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-2xl font-display font-bold">Elite Package</h3>
+                        <span class="text-xs bg-accent/15 text-accent px-2.5 py-1 rounded-full">Slots Available: 1</span>
+                    </div>
+                    <p class="text-primary/70 text-sm mb-4">No Lock Ins • No Contracts • First Come First Serve</p>
+                    <div class="text-3xl font-display font-bold text-accent mb-4">$300<span class="text-base text-primary/70 font-sans">/month</span></div>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Featured Logo placement in sponsored section</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Featured Logo placement in Footer across ALL pages</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Featured Logo on ALL blog pages in a dedicated "Sponsored by" area</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Dedicated and manageable Sponsor page with custom URL</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Social media mentions across ALL social platforms</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Newsletter inclusion: pick up to 5 monthly rollouts (offers, announcements, etc.) — Newsletters not yet active</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Custom editor panel: post up to 5 times on our blog</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Participate in Sponsorship Perk System</li>
+                    </ul>
+                </div>
+
+                <!-- Premium -->
+                <div class="bg-white rounded-xl border border-accent/20 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-2xl font-display font-bold">Premium Package</h3>
+                        <span class="text-xs bg-accent/15 text-accent px-2.5 py-1 rounded-full">Slots Available: 2</span>
+                    </div>
+                    <p class="text-primary/70 text-sm mb-4">No Lock Ins • No Contracts • First Come First Serve</p>
+                    <div class="text-3xl font-display font-bold text-accent mb-4">$100<span class="text-base text-primary/70 font-sans">/month</span></div>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Featured Logo placement in sponsored section</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Newsletter inclusion: pick up to 1 monthly rollout — Newsletters not yet active</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Custom editor panel: post up to 1 time on our blog</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> One-time social media mention (thank-you-style announcement)</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Dedicated store marketing page</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Participate in Sponsorship Perk System</li>
+                    </ul>
+                </div>
+
+                <!-- Standard -->
+                <div class="bg-white rounded-xl border border-accent/20 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-2xl font-display font-bold">Standard Package</h3>
+                        <span class="text-xs bg-accent/15 text-accent px-2.5 py-1 rounded-full">Slots Available: 3</span>
+                    </div>
+                    <p class="text-primary/70 text-sm mb-4">No Lock Ins • No Contracts • First Come First Serve</p>
+                    <div class="text-3xl font-display font-bold text-accent mb-4">$50<span class="text-base text-primary/70 font-sans">/month</span></div>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Featured Logo placement in sponsored section</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Dedicated store marketing page</li>
+                        <li class="flex"><span class="text-accent mr-2">✓</span> Participate in Sponsorship Perk System</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Perks System -->
+    <section class="py-10 px-5 bg-primary text-paper">
+        <div class="container mx-auto max-w-5xl">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-display font-bold mb-3">Perks System <span class="text-accent">Explained</span></h2>
+                <p class="text-paper/80 max-w-3xl mx-auto">What sponsors get out of our Partner Pass program.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-paper/10 rounded-xl p-6 border border-paper/20">
+                    <h3 class="font-display font-bold text-xl mb-3">Sponsorship Perks Participation</h3>
+                    <p class="text-paper/80">All sponsors gain access to our Partner Pass — a local perk program connecting sponsors directly with our community through exclusive offers.</p>
+                </div>
+                <div class="bg-paper/10 rounded-xl p-6 border border-paper/20">
+                    <h3 class="font-display font-bold text-xl mb-3">What You Get</h3>
+                    <ul class="space-y-2 text-paper/80">
+                        <li class="flex"><span class="text-accent mr-2">•</span> Feature Listing: Your business + perk will be listed in the Partner Pass directory on our site.</li>
+                        <li class="flex"><span class="text-accent mr-2">•</span> Newsletter Exposure: Your offer highlighted in 1–5 monthly newsletters (tier-based).</li>
+                        <li class="flex"><span class="text-accent mr-2">•</span> Social Boost: We promote your exclusive deal across our social media pages.</li>
+                        <li class="flex"><span class="text-accent mr-2">•</span> Traffic Driver: Direct link to your offer or landing page.</li>
+                        <li class="flex"><span class="text-accent mr-2">•</span> Real Engagement: Members are incentivized to visit your business or site to redeem the offer.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-paper/70 border-t border-paper/10 mt-10">
+        <div class="container mx-auto px-5 py-12">
+            <div class="grid md:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <h3 class="font-display font-bold text-lg text-paper mb-4">About</h3>
+                    <p>Sunsets & Indicas is a magazine celebrating cannabis culture, cultivation, and community in Las Cruces, New Mexico.</p>
+                </div>
+                <div>
+                    <h3 class="font-display font-bold text-lg text-paper mb-4">Explore</h3>
+                    <ul class="space-y-2">
+                        <li><a href="issues.html" class="hover:text-accent transition">Latest Issues</a></li>
+                        <li><a href="blogs.html" class="hover:text-accent transition">Latest Blogs</a></li>
+                        <li><a href="contact.html" class="hover:text-accent transition">Get in Touch</a></li>
+                        <li><a href="index.html#merch" class="hover:text-accent transition">Merch Store</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-display font-bold text-lg text-paper mb-4">Legal</h3>
+                    <ul class="space-y-2">
+                        <li><a href="legal.html" class="hover:text-accent transition">Privacy Policy</a></li>
+                        <li><a href="legal.html" class="hover:text-accent transition">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-display font-bold text-lg text-paper mb-4">Stay Updated</h3>
+                    <p class="mb-4">Sign up for our newsletter with exclusive content and local event updates.</p>
+                    <form class="flex">
+                        <input type="email" placeholder="Your email" class="flex-grow bg-paper/10 border border-paper/20 text-paper placeholder-paper/50 px-4 py-2 rounded-l-full focus:outline-none focus:ring-1 focus:ring-accent">
+                        <button type="submit" class="bg-accent hover:bg-darkaccent text-paper px-4 py-2 rounded-r-full transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="border-t border-paper/10 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p>© 2025 Sunsets & Indicas. All rights reserved.</p>
+                <div class="mt-4 md:mt-0 text-sm text-paper/60">Made by Blacnova</div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuButton = document.getElementById('mobile-menu-button');
+            if (!mobileMenu.contains(event.target) && !menuButton.contains(event.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+
+        // Fetch latest blog and update READ LATEST buttons
+        (function() {
+            const cacheBuster = '?_=' + new Date().getTime();
+            fetch('/api/blogs' + cacheBuster)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    const newest = data.slice().reverse()[0];
+                    if (!newest || !newest.redirect) return;
+                    const headerBtn = document.getElementById('read-latest-header-btn');
+                    const mobileBtn = document.getElementById('read-latest-mobile-btn');
+                    if (headerBtn) headerBtn.href = newest.redirect;
+                    if (mobileBtn) mobileBtn.href = newest.redirect;
+                })
+                .catch(() => {});
+        })();
+    </script>
+</body>
+</html>
+
+
