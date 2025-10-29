@@ -1,1194 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard | Sunsets & Indicas</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica:ital@0;1&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = { theme: { extend: { colors: { primary:'#a56ab8', dark:'#171717' }, fontFamily:{ sans:['IM Fell Double Pica','serif'], display:['IM Fell Double Pica','serif'] }}} }
-  </script>
-</head>
-<body class="bg-gray-50 text-dark font-sans">
-  <div class="max-w-6xl mx-auto p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-3xl font-display font-bold">Admin Dashboard</h1>
-      <div class="flex gap-2">
-        <input id="adminUser" class="border p-2 rounded text-sm" placeholder="Admin Email">
-        <input id="adminPass" type="password" class="border p-2 rounded text-sm" placeholder="Admin Password">
-        <button id="authCheck" class="bg-primary text-white px-3 py-2 rounded text-sm">Connect</button>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white border rounded-lg p-4"><div class="text-sm text-gray-500">Blogs</div><div id="statBlogs" class="text-2xl font-display">-</div></div>
-      <div class="bg-white border rounded-lg p-4"><div class="text-sm text-gray-500">Issues</div><div id="statIssues" class="text-2xl font-display">-</div></div>
-      <div class="bg-white border rounded-lg p-4"><div class="text-sm text-gray-500">Sponsors</div><div id="statSponsors" class="text-2xl font-display">-</div></div>
-      <div class="bg-white border rounded-lg p-4"><div class="text-sm text-gray-500">You</div><div id="statMe" class="text-xs break-all">Not connected</div></div>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-6">
-      <div class="bg-white border rounded-lg p-4">
-        <h2 class="font-display font-bold mb-3">Create Blog</h2>
-        <div class="space-y-2">
-          <input id="bTitle" class="w-full border p-2 rounded" placeholder="Title">
-          <textarea id="bDesc" class="w-full border p-2 rounded" placeholder="Description"></textarea>
-          <input id="bImage" class="w-full border p-2 rounded" placeholder="Image URL (GitHub/CDN)">
-          <input id="bRedirect" class="w-full border p-2 rounded" placeholder="Redirect URL">
-          <input id="bButton" class="w-full border p-2 rounded" placeholder="Button Text (default Read)">
-          <button id="createBlog" class="bg-primary text-white px-4 py-2 rounded">Publish Blog</button>
-        </div>
-      </div>
-
-      <div class="bg-white border rounded-lg p-4">
-        <h2 class="font-display font-bold mb-3">Create Issue</h2>
-        <div class="space-y-2">
-          <input id="iTitle" class="w-full border p-2 rounded" placeholder="Title">
-          <textarea id="iDesc" class="w-full border p-2 rounded" placeholder="Description"></textarea>
-          <input id="iImage" class="w-full border p-2 rounded" placeholder="Image URL (GitHub/CDN)">
-          <input id="iRedirect" class="w-full border p-2 rounded" placeholder="Redirect URL">
-          <input id="iButton" class="w-full border p-2 rounded" placeholder="Button Text (default View)">
-          <button id="createIssue" class="bg-primary text-white px-4 py-2 rounded">Publish Issue</button>
-        </div>
-      </div>
-
-      <div class="bg-white border rounded-lg p-4">
-        <h2 class="font-display font-bold mb-3">Create User / Sponsor</h2>
-        <div class="grid md:grid-cols-2 gap-3 mb-3">
-          <input id="uEmail" class="border p-2 rounded" placeholder="Email">
-          <input id="uPass" class="border p-2 rounded" placeholder="Password">
-          <select id="uRole" class="border p-2 rounded"><option value="sponsor">Sponsor</option><option value="admin">Admin</option></select>
-          <input id="spCompany" class="border p-2 rounded" placeholder="Company Name (sponsor)">
-          <select id="spPackage" class="border p-2 rounded"><option value="standard">Standard</option><option value="premium">Premium</option><option value="elite">Elite</option></select>
-          <input id="spSlug" class="border p-2 rounded" placeholder="Custom URL Slug (sponsor)">
-          <input id="spLogo" class="border p-2 rounded" placeholder="Logo URL (sponsor)">
-        </div>
-        <button id="createUser" class="bg-dark text-white px-4 py-2 rounded">Create User</button>
-      </div>
-
-      <div class="bg-white border rounded-lg p-4">
-        <div class="flex items-center justify-between mb-2"><h2 class="font-display font-bold">Sponsors</h2><button id="refreshSponsors" class="text-sm underline">Refresh</button></div>
-        <ul id="sponsorsList" class="space-y-2 text-sm"></ul>
-      </div>
-
-      <div class="bg-white border rounded-lg p-4">
-        <div class="flex items-center justify-between mb-2"><h2 class="font-display font-bold">Blogs</h2><button id="refreshBlogs" class="text-sm underline">Refresh</button></div>
-        <ul id="blogsList" class="space-y-2 text-sm"></ul>
-      </div>
-
-      <div class="bg-white border rounded-lg p-4">
-        <div class="flex items-center justify-between mb-2"><h2 class="font-display font-bold">Issues</h2><button id="refreshIssues" class="text-sm underline">Refresh</button></div>
-        <ul id="issuesList" class="space-y-2 text-sm"></ul>
-      </div>
-    </div>
-  </div>
-
-<script>
-function authHeader() {
-  const u = document.getElementById('adminUser').value;
-  const p = document.getElementById('adminPass').value;
-  if (!u || !p) return {};
-  return { 'Authorization': 'Basic ' + btoa(u + ':' + p) };
-}
-
-async function getJson(path, opts = {}) {
-  const res = await fetch(path, opts);
-  if (!res.ok) return null;
-  try { return await res.json(); } catch { return null; }
-}
-
-async function updateStats() {
-  const blogs = await getJson('/api/blogs');
-  const issues = await getJson('/api/issues');
-  const sponsors = await fetch('/api/admin/sponsors', { headers: authHeader() }).then(r => r.ok ? r.json() : []);
-  const me = await fetch('/api/me', { headers: authHeader() }).then(r => r.ok ? r.json() : null);
-  document.getElementById('statBlogs').textContent = Array.isArray(blogs) ? blogs.length : '-';
-  document.getElementById('statIssues').textContent = Array.isArray(issues) ? issues.length : '-';
-  document.getElementById('statSponsors').textContent = Array.isArray(sponsors) ? sponsors.length : '-';
-  document.getElementById('statMe').textContent = me ? (me.email + ' • ' + me.role) : 'Not connected';
-}
-
-async function create(path, body) {
-  const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: JSON.stringify(body) });
-  if (!res.ok) { const t = await res.text(); alert('Error: ' + t); return false; }
-  return true;
-}
-
-document.getElementById('authCheck').addEventListener('click', updateStats);
-
-document.getElementById('createBlog').addEventListener('click', async () => {
-  const payload = { title: bTitle.value, description: bDesc.value, image: bImage.value, redirect: bRedirect.value, buttonText: bButton.value || 'Read' };
-  if (await create('/api/blogs', payload)) { alert('Blog published'); loadBlogs(); updateStats(); }
-});
-
-document.getElementById('createIssue').addEventListener('click', async () => {
-  const payload = { title: iTitle.value, description: iDesc.value, image: iImage.value, redirect: iRedirect.value, buttonText: iButton.value || 'View' };
-  if (await create('/api/issues', payload)) { alert('Issue published'); loadIssues(); updateStats(); }
-});
-
-document.getElementById('createUser').addEventListener('click', async () => {
-  const payload = { email: uEmail.value, password: uPass.value, role: uRole.value, companyName: spCompany.value, package: spPackage.value, slug: spSlug.value, logoUrl: spLogo.value };
-  const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: JSON.stringify(payload) });
-  if (res.ok) { alert('User created'); loadSponsors(); updateStats(); } else { alert('Create failed'); }
-});
-
-async function loadBlogs() {
-  const ul = blogsList; ul.innerHTML = 'Loading...';
-  const data = await getJson('/api/blogs');
-  if (!Array.isArray(data)) { ul.innerHTML = 'Failed to load blogs'; return; }
-  ul.innerHTML = '';
-  data.forEach(item => {
-    const li = document.createElement('li');
-    li.className = 'flex items-center justify-between border-b py-1';
-    li.innerHTML = `<span>${item.title}</span><button data-id="${item.id}" class="delBlog text-red-600">Delete</button>`;
-    ul.appendChild(li);
-  });
-  ul.querySelectorAll('.delBlog').forEach(btn => btn.addEventListener('click', async (e) => {
-    const id = e.target.getAttribute('data-id');
-    const res = await fetch('/api/blogs?id=' + id, { method: 'DELETE', headers: authHeader() });
-    if (res.ok) { loadBlogs(); updateStats(); } else { alert('Delete failed'); }
-  }));
-}
-
-async function loadIssues() {
-  const ul = issuesList; ul.innerHTML = 'Loading...';
-  const data = await getJson('/api/issues');
-  if (!Array.isArray(data)) { ul.innerHTML = 'Failed to load issues'; return; }
-  ul.innerHTML = '';
-  data.forEach(item => {
-    const li = document.createElement('li');
-    li.className = 'flex items-center justify-between border-b py-1';
-    li.innerHTML = `<span>${item.title}</span><button data-id="${item.id}" class="delIssue text-red-600">Delete</button>`;
-    ul.appendChild(li);
-  });
-  ul.querySelectorAll('.delIssue').forEach(btn => btn.addEventListener('click', async (e) => {
-    const id = e.target.getAttribute('data-id');
-    const res = await fetch('/api/issues?id=' + id, { method: 'DELETE', headers: authHeader() });
-    if (res.ok) { loadIssues(); updateStats(); } else { alert('Delete failed'); }
-  }));
-}
-
-async function loadSponsors() {
-  const ul = sponsorsList; ul.innerHTML = 'Loading...';
-  const r = await fetch('/api/admin/sponsors', { headers: authHeader() });
-  if (!r.ok) { ul.innerHTML = r.status === 401 ? 'Enter admin credentials and click Connect.' : 'Failed to load sponsors'; return; }
-  let data = []; try { data = await r.json(); } catch { ul.innerHTML = 'Failed to parse'; return; }
-  if (!Array.isArray(data)) { ul.innerHTML = 'No sponsors yet.'; return; }
-  ul.innerHTML = '';
-  data.forEach(item => {
-    const li = document.createElement('li');
-    li.className = 'flex items-center justify-between border-b py-1';
-    li.innerHTML = `<span>${item.company_name} (${item.package})</span><span class="text-gray-500">${item.email}</span>`;
-    ul.appendChild(li);
-  });
-}
-
-document.getElementById('refreshBlogs').addEventListener('click', loadBlogs);
-document.getElementById('refreshIssues').addEventListener('click', loadIssues);
-document.getElementById('refreshSponsors').addEventListener('click', loadSponsors);
-
-updateStats();
-loadBlogs();
-loadIssues();
-loadSponsors();
-</script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | Sunsets & Indicas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IM+Fell+Double+Pica:ital@0;1&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = { theme: { extend: { fontFamily: { sans: ['IM Fell Double Pica','serif'], display: ['IM Fell Double Pica','serif'] }}}}
-    </script>
-</head>
-<body class="bg-paper text-primary font-sans">
-    <div class="max-w-5xl mx-auto p-6">
-        <h1 class="text-3xl font-display font-bold mb-6">Admin Dashboard</h1>
-
-        <div class="bg-white rounded-lg border p-4 mb-6">
-            <h2 class="font-display font-bold mb-2">Admin Credentials</h2>
-            <div class="grid md:grid-cols-2 gap-3">
-                <input id="adminUser" class="border p-2 rounded" placeholder="ADMIN_USER">
-                <input id="adminPass" type="password" class="border p-2 rounded" placeholder="ADMIN_PASS">
-            </div>
-            <p class="text-sm text-primary/70 mt-2">Values are only used in-browser to build Basic Auth for API calls.</p>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-6">
-            <div class="bg-white rounded-lg border p-4">
-                <h2 class="font-display font-bold mb-3">Create Blog</h2>
-                <div class="space-y-2">
-                    <input id="bTitle" class="w-full border p-2 rounded" placeholder="Title">
-                    <textarea id="bDesc" class="w-full border p-2 rounded" placeholder="Description"></textarea>
-                    <input id="bImage" class="w-full border p-2 rounded" placeholder="Image URL (GitHub/CDN)">
-                    <input id="bRedirect" class="w-full border p-2 rounded" placeholder="Redirect URL">
-                    <input id="bButton" class="w-full border p-2 rounded" placeholder="Button Text (default Read)">
-                    <button id="createBlog" class="bg-accent text-white px-4 py-2 rounded">Publish Blog</button>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg border p-4">
-                <h2 class="font-display font-bold mb-3">Create Issue</h2>
-                <div class="space-y-2">
-                    <input id="iTitle" class="w-full border p-2 rounded" placeholder="Title">
-                    <textarea id="iDesc" class="w-full border p-2 rounded" placeholder="Description"></textarea>
-                    <input id="iImage" class="w-full border p-2 rounded" placeholder="Image URL (GitHub/CDN)">
-                    <input id="iRedirect" class="w-full border p-2 rounded" placeholder="Redirect URL">
-                    <input id="iButton" class="w-full border p-2 rounded" placeholder="Button Text (default View)">
-                    <button id="createIssue" class="bg-accent text-white px-4 py-2 rounded">Publish Issue</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg border p-4 mt-6">
-            <h2 class="font-display font-bold mb-3">Create User / Sponsor</h2>
-            <div class="grid md:grid-cols-2 gap-3 mb-3">
-                <input id="uEmail" class="border p-2 rounded" placeholder="Email">
-                <input id="uPass" class="border p-2 rounded" placeholder="Password">
-                <select id="uRole" class="border p-2 rounded">
-                    <option value="sponsor">Sponsor</option>
-                    <option value="admin">Admin</option>
-                </select>
-                <input id="spCompany" class="border p-2 rounded" placeholder="Company Name (sponsor)">
-                <select id="spPackage" class="border p-2 rounded">
-                    <option value="standard">Standard</option>
-                    <option value="premium">Premium</option>
-                    <option value="elite">Elite</option>
-                </select>
-                <input id="spSlug" class="border p-2 rounded" placeholder="Custom URL Slug (sponsor)">
-                <input id="spLogo" class="border p-2 rounded" placeholder="Logo URL (sponsor)">
-            </div>
-            <button id="createUser" class="bg-button text-white px-4 py-2 rounded">Create User</button>
-        </div>
-
-        <div class="bg-white rounded-lg border p-4 mt-6">
-            <div class="flex items-center justify-between mb-2">
-                <h2 class="font-display font-bold">Sponsors</h2>
-                <button id="refreshSponsors" class="text-sm underline">Refresh</button>
-            </div>
-            <ul id="sponsorsList" class="space-y-2 text-sm"></ul>
-        </div>
-
-        <div class="mt-8 grid md:grid-cols-2 gap-6">
-            <div class="bg-white rounded-lg border p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <h2 class="font-display font-bold">Blogs</h2>
-                    <button id="refreshBlogs" class="text-sm underline">Refresh</button>
-                </div>
-                <ul id="blogsList" class="space-y-2 text-sm"></ul>
-            </div>
-            <div class="bg-white rounded-lg border p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <h2 class="font-display font-bold">Issues</h2>
-                    <button id="refreshIssues" class="text-sm underline">Refresh</button>
-                </div>
-                <ul id="issuesList" class="space-y-2 text-sm"></ul>
-            </div>
-        </div>
-    </div>
-
-<script>
-function authHeader() {
-    const u = document.getElementById('adminUser').value;
-    const p = document.getElementById('adminPass').value;
-    if (!u || !p) return {};
-    return { 'Authorization': 'Basic ' + btoa(u + ':' + p) };
-}
-
-async function create(path, body) {
-    const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: JSON.stringify(body) });
-    if (!res.ok) { const t = await res.text(); alert('Error: ' + t); return false; }
-    return true;
-}
-
-document.getElementById('createBlog').addEventListener('click', async () => {
-    const payload = {
-        title: document.getElementById('bTitle').value,
-        description: document.getElementById('bDesc').value,
-        image: document.getElementById('bImage').value,
-        redirect: document.getElementById('bRedirect').value,
-        buttonText: document.getElementById('bButton').value || 'Read'
-    };
-    if (await create('/api/blogs', payload)) { alert('Blog published'); loadBlogs(); }
-});
-
-document.getElementById('createIssue').addEventListener('click', async () => {
-    const payload = {
-        title: document.getElementById('iTitle').value,
-        description: document.getElementById('iDesc').value,
-        image: document.getElementById('iImage').value,
-        redirect: document.getElementById('iRedirect').value,
-        buttonText: document.getElementById('iButton').value || 'View'
-    };
-    if (await create('/api/issues', payload)) { alert('Issue published'); loadIssues(); }
-});
-
-async function loadBlogs() {
-    const ul = document.getElementById('blogsList');
-    ul.innerHTML = 'Loading...';
-    const r = await fetch('/api/blogs');
-    const data = await r.json();
-    ul.innerHTML = '';
-    data.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between border-b py-1';
-        li.innerHTML = `<span>${item.title}</span><button data-id="${item.id}" class="delBlog text-red-600">Delete</button>`;
-        ul.appendChild(li);
-    });
-    ul.querySelectorAll('.delBlog').forEach(btn => btn.addEventListener('click', async (e) => {
-        const id = e.target.getAttribute('data-id');
-        const res = await fetch('/api/blogs?id=' + id, { method: 'DELETE', headers: authHeader() });
-        if (res.ok) { loadBlogs(); } else { alert('Delete failed'); }
-    }));
-}
-
-async function loadIssues() {
-    const ul = document.getElementById('issuesList');
-    ul.innerHTML = 'Loading...';
-    const r = await fetch('/api/issues');
-    const data = await r.json();
-    ul.innerHTML = '';
-    data.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between border-b py-1';
-        li.innerHTML = `<span>${item.title}</span><button data-id="${item.id}" class="delIssue text-red-600">Delete</button>`;
-        ul.appendChild(li);
-    });
-    ul.querySelectorAll('.delIssue').forEach(btn => btn.addEventListener('click', async (e) => {
-        const id = e.target.getAttribute('data-id');
-        const res = await fetch('/api/issues?id=' + id, { method: 'DELETE', headers: authHeader() });
-        if (res.ok) { loadIssues(); } else { alert('Delete failed'); }
-    }));
-}
-
-document.getElementById('refreshBlogs').addEventListener('click', loadBlogs);
-document.getElementById('refreshIssues').addEventListener('click', loadIssues);
-document.getElementById('createUser').addEventListener('click', async () => {
-    const payload = {
-        email: document.getElementById('uEmail').value,
-        password: document.getElementById('uPass').value,
-        role: document.getElementById('uRole').value,
-        companyName: document.getElementById('spCompany').value,
-        package: document.getElementById('spPackage').value,
-        slug: document.getElementById('spSlug').value,
-        logoUrl: document.getElementById('spLogo').value
-    };
-    const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader() }, body: JSON.stringify(payload) });
-    if (res.ok) { alert('User created'); loadSponsors(); } else { alert('Create failed'); }
-});
-
-async function loadSponsors() {
-    const ul = document.getElementById('sponsorsList');
-    ul.innerHTML = 'Loading...';
-    const r = await fetch('/api/admin/sponsors', { headers: authHeader() });
-    if (!r.ok) {
-        if (r.status === 401) { ul.innerHTML = 'Enter admin credentials above, then click Refresh.'; return; }
-        ul.innerHTML = 'Failed to load sponsors.'; return;
-    }
-    let data = [];
-    try { data = await r.json(); } catch (_) { ul.innerHTML = 'Failed to parse sponsors.'; return; }
-    if (!Array.isArray(data)) { ul.innerHTML = 'No sponsors yet.'; return; }
-    ul.innerHTML = '';
-    data.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between border-b py-1';
-        li.innerHTML = `<span>${item.company_name} (${item.package})</span><span class="text-primary/60">${item.email}</span>`;
-        ul.appendChild(li);
-    });
-}
-
-loadBlogs();
-loadIssues();
-loadSponsors();
-</script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunsets & Indicas - Admin Dashboard</title>
-    <link rel="icon" type="image/png" href="../main/img/new-logo.png">
-    <link rel="apple-touch-icon" href="../main/img/new-logo.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-
-
-</head>
-
-
-
-
-
-
-
-
-
-
-<header class="bg-dark text-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-4">
-                    <div class="flex items-center space-x-4">
-                        <a href="https://sunsetsandindicas.com/#">
-                            <img src="assets/logo.png" alt="Sunsets & Indicas Logo" class="h-10">
-                        </a>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <button id="submit-ticket-btn" class="bg-primary hover:bg-primary-dark px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
-                            <i class="fas fa-ticket-alt mr-1"></i> Submit Ticket
-                        </button>
-                        <a href="index.html" class="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
-                            Dashboard
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-
-
-<body class="bg-gray-50 flex flex-col min-h-screen">
-<!-- Main Content -->
-<div class="main-content flex-grow">
-    <div class="max-w-4xl mx-auto px-4 py-12">
-        <!-- Upload Section Header -->
-        <div class="mb-10 text-center">
-            <h1 class="text-4xl font-bold text-dark mb-2">Sunsets & Indicas Dashboard</h1>
-            <p class="text-gray-600 max-w-lg mx-auto">
-                Manage content for your Las Cruces cannabis magazine including articles, blogs, and community features.
-            </p>
-        </div>
-
-        <!-- Website Essentials & Blogs/Issues Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-
-            <!-- Website Essentials -->
-            <a href="foh.html" class="relative bg-white p-8 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col overflow-hidden group" data-aos="fade-up" data-aos-delay="100">
-                <div class="absolute inset-0 bg-gradient-to-br from-green-50 to-white opacity-80"></div>
-                <div class="relative z-10 h-full flex flex-col">
-                    <div class="w-12 h-12 mb-6 rounded-lg bg-green-600 flex items-center justify-center shadow-md group-hover:bg-green-700 transition-colors">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M4 6h16M4 12h16M4 18h7" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900">Website Essentials</h3>
-                    <p class="mt-3 text-gray-600">
-                        Manage your website’s content, monitor form submissions, and view collected user information all in one place.
-                    </p>
-                    <div class="mt-auto pt-6 border-t border-gray-200">
-                        <span class="inline-flex items-center text-green-600 hover:text-green-500 font-medium transition-colors duration-300">
-                            Go to Essentials
-                            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-                <div class="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 rounded-full bg-green-500 opacity-10"></div>
-            </a>
-
-            <!-- Blogs & Issues -->
-            <a href="boh.html" class="relative bg-white p-8 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col overflow-hidden group" data-aos="fade-up" data-aos-delay="150">
-                <div class="absolute inset-0 bg-gradient-to-br from-green-50 to-white opacity-80"></div>
-                <div class="relative z-10 h-full flex flex-col">
-                    <div class="w-12 h-12 mb-6 rounded-lg bg-green-600 flex items-center justify-center shadow-md group-hover:bg-green-700 transition-colors">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M12 20h9" stroke-linecap="round" stroke-linejoin="round" />
-                            <path d="M16.5 3a2.121 2.121 0 013 3L7 18l-4 1 1-4L16.5 3z" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900">Blogs & Issues</h3>
-                    <p class="mt-3 text-gray-600">
-                        Create and manage blog content or public-facing issue announcements for better communication with your users.
-                    </p>
-                    <div class="mt-auto pt-6 border-t border-gray-200">
-                        <span class="inline-flex items-center text-green-600 hover:text-green-500 font-medium transition-colors duration-300">
-                            Go to Blogs/Issues
-                            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-            <!-- Sponsorship Management -->
-            <a href="sponsorship.html" class="relative bg-white p-8 rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col overflow-hidden group" data-aos="fade-up" data-aos-delay="200">
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-50 to-white opacity-80"></div>
-                <div class="relative z-10 h-full flex flex-col">
-                    <div class="w-12 h-12 mb-6 rounded-lg bg-purple-600 flex items-center justify-center shadow-md group-hover:bg-purple-700 transition-colors">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900">Sponsorship Management</h3>
-                    <p class="mt-3 text-gray-600">
-                        Manage sponsor applications, approve partnerships, and control sponsored content placement on the website.
-                    </p>
-                    <div class="mt-auto pt-6 border-t border-gray-200">
-                        <span class="inline-flex items-center text-purple-600 hover:text-purple-500 font-medium transition-colors duration-300">
-                            Manage Sponsors
-                            <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-                <div class="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 rounded-full bg-purple-500 opacity-10"></div>
-            </a>
-
-
-
-
-
-
-            <!-- View More Section -->
-            <div class="bg-white rounded-xl shadow-card border border-gray-100 p-6 mb-8 text-center">
-                <h3 class="text-lg font-medium text-dark mb-2">Need Help?</h3>
-                <p class="text-gray-600 mb-4">Contact support if you have any questions about Sunsets & Indicas CMS</p>
-                <button id="submit-ticket-btn-bottom" class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg shadow-button hover:shadow-button-hover transition-all">
-                    <i class="fas fa-ticket-alt mr-2"></i> Submit Ticket
-                </button>
-            </div>
-        </div>
-
-        <!-- Submit Ticket Modal -->
-        <div id="ticket-modal" class="custom-modal hidden">
-            <div class="custom-modal-content">
-                <div class="custom-modal-header">
-                    <h3 class="custom-modal-title">Submit a Ticket</h3>
-                    <button id="close-ticket-modal" class="custom-modal-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <form id="ticket-form" class="custom-modal-body space-y-4">
-                    <div>
-                        <label for="ticket-subject" class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                        <input type="text" id="ticket-subject" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-                    </div>
-                    <div>
-                        <label for="ticket-message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                        <textarea id="ticket-message" rows="4" required
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
-                    </div>
-                </form>
-                <div class="custom-modal-footer">
-                    <button id="ticket-modal-cancel" type="button" class="custom-modal-btn custom-modal-btn-secondary">
-                        Cancel
-                    </button>
-                    <button type="submit" form="ticket-form" class="custom-modal-btn custom-modal-btn-primary">
-                        Submit Ticket
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Toast -->
-        <div id="toast" class="hidden fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg flex items-center">
-            <i class="fas fa-check-circle mr-2 text-green-400"></i>
-            <span id="toast-msg"></span>
-        </div>
-    </div>
-
-    <!-- Modern Footer -->
-    <footer class="bg-white border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="md:flex md:items-center md:justify-between">
-                <div class="flex justify-center md:order-2 space-x-6">
-                    <p class="text-xs text-gray-500">
-                        <span class="block md:inline mt-1 md:mt-0">A Product of Blacnova.</span>
-                    </p>
-                </div>
-                <div class="mt-8 md:mt-0 md:order-1">
-                        <p class="text-center text-xs text-gray-500">
-                        &copy; 2025 Sunsets & Indicas. All rights reserved.
-                        <span class="block md:inline mt-1 md:mt-0">Unauthorized use is unlawful and prohibited.</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-</body>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<style> 
-/* Password Protection */
-.password-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(23, 23, 23, 0.96);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(5px);
-    overflow: hidden; /* Prevent scrolling */
-}
-
-body.password-protected {
-    overflow: hidden; /* Disable scrolling on body */
-    position: fixed;
-    width: 100%;
-    height: 100%;
-}
-
-.password-box {
-    background: white;
-    border-radius: 12px;
-    padding: 2.5rem;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    transform: translateY(-20px);
-    opacity: 0;
-    animation: slideUp 0.4s ease-out forwards;
-}
-
-@keyframes slideUp {
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.remember-me {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.remember-me input {
-    margin-right: 0.5rem;
-}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - Sunsets & Indicas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0b0f17; --card: #121826; --text: #e5e7eb; --muted:#9ca3af; --brand:#10b981; --danger:#ef4444; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+  header { padding: 20px; border-bottom: 1px solid #1f2937; display:flex; align-items:center; justify-content: space-between; }
+  header h1 { margin:0; font-size: 18px; font-weight: 700; }
+  header .right { display:flex; gap:10px; align-items:center; }
+  main { max-width: 1100px; margin: 24px auto; padding: 0 16px 48px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(320px,1fr)); gap:16px; }
+  .card { background: var(--card); border:1px solid #1f2937; border-radius: 10px; padding:16px; }
+  .card h2 { margin:0 0 10px; font-size:16px; }
+  label { display:block; font-size:12px; color: var(--muted); margin: 10px 0 4px; }
+  input, textarea { width:100%; background:#0d1420; border:1px solid #233047; color:var(--text); border-radius:8px; padding:10px 12px; outline:none; }
+  textarea { min-height: 90px; resize: vertical; }
+  .row { display:flex; gap:10px; }
+  .row > * { flex:1; }
+  button { background: var(--brand); color:#00150f; border:none; border-radius:8px; padding:10px 14px; font-weight:600; cursor:pointer; }
+  button.secondary { background:#1f2937; color: var(--text); border:1px solid #2b3a54; }
+  button.danger { background: var(--danger); color:#fff; }
+  .muted { color: var(--muted); font-size: 12px; }
+  ul.list { list-style: none; padding:0; margin:0; display:flex; flex-direction: column; gap:8px; max-height: 360px; overflow:auto; }
+  .item { display:flex; gap:12px; align-items:center; justify-content: space-between; background:#0d1420; border:1px solid #1f2937; border-radius:8px; padding:10px 12px; }
+  .item .meta { display:flex; flex-direction: column; gap:4px; }
+  .hidden { display:none !important; }
+  .authbar { font-size: 12px; color: var(--muted); }
+  .pill { padding: 2px 8px; border-radius: 999px; background:#112e26; color:#7ff0c8; font-size:11px; }
 </style>
-
-<!-- Password Protection -->
-<div id="password-protection" class="password-container">
-    <div class="password-box">
-        <div class="text-center mb-6">
-            <div class="flex justify-center mb-4">
-                <a href="https://sunsetsandindicas.com/#">
-                    <img src="assets/logo_black.png" alt="Sunsets & Indicas Logo" class="h-14">
-                </a>
-            </div>
-            <h2 class="text-2xl font-bold text-dark mb-1">Content Management</h2>
-            <p class="text-gray-600">Enter credentials to continue</p>
-        </div>
-        
-        <form id="password-form" class="space-y-4">
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" id="email" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-            </div>
-            
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" id="password" required
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-            </div>
-            
-            <div class="remember-me">
-                <input type="checkbox" id="remember-me" name="remember-me">
-                <label for="remember-me" class="text-sm text-gray-700">Remember me</label>
-            </div>
-            
-            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                Continue
-            </button>
-        </form>
-        
-        <div class="mt-6 text-center text-xs text-gray-500">
-            Unauthorized use is unlawful and prohibited
-        </div>
+</head>
+<body>
+  <header>
+    <h1>Admin Dashboard</h1>
+    <div class="right">
+      <span id="whoami" class="authbar muted">Not signed in</span>
+      <button id="btnLogout" class="secondary hidden">Logout</button>
     </div>
-</div>
-<script>
-// Wrap everything in an IIFE (Immediately Invoked Function Expression) to avoid redeclaration
-(function() {
-    // Enhanced Password Protection with DOM Tampering Protection
-    const passwordProtection = document.getElementById('password-protection');
-    const mainContent = document.getElementById('main-content');
+  </header>
+  <main>
+    <div id="loginCard" class="card">
+      <h2>Sign in</h2>
+      <p class="muted">Use your admin email and password.</p>
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input id="email" type="email" placeholder="nic@blacnova.net" value="nic@blacnova.net">
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="password" type="password" placeholder="••••" value="2900">
+        </div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+        <button id="btnLogin">Sign in</button>
+        <span id="loginMsg" class="muted"></span>
+      </div>
+    </div>
 
-    // Check if user has recently logged in or has "Remember me" enabled
-    const checkAccess = () => {
-        // If "Remember me" is enabled
-        if (localStorage.getItem('remembered') === 'true') {
-            return true;
-        }
-        
-        // Check 24-hour session
-        const lastLogin = localStorage.getItem('lastLogin');
-        if (lastLogin) {
-            const now = new Date().getTime();
-            const twentyFourHours = 24 * 60 * 60 * 1000;
-            return (now - parseInt(lastLogin)) < twentyFourHours;
-        }
-        
-        return false;
-    };
-
-    // If user has access, hide the password protection immediately
-    if (checkAccess()) {
-        passwordProtection.style.display = 'none';
-        if (mainContent) mainContent.classList.remove('hidden');
-        document.body.classList.remove('password-protected');
-        return; // Skip the rest of the security checks since user is authenticated
-    }
-
-    // Self-check on load
-    if (!passwordProtection) {
-        document.body.innerHTML = `
-            <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#171717; color:white; font-family:sans-serif; text-align:center; padding:20px;">
-                <div>
-                    <h1 style="color:#ef4444; margin-bottom:20px;">Security System Activated</h1>
-                    <p>Unauthorized use is unlawful and prohibited</p>
-                </div>
+    <div id="dash" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <h2>Create Blog</h2>
+          <label>Title</label>
+          <input id="b_title" type="text" placeholder="Title">
+          <label>Description</label>
+          <textarea id="b_desc" placeholder="Short description"></textarea>
+          <div class="row">
+            <div>
+              <label>Image URL</label>
+              <input id="b_image" type="text" placeholder="https://...">
             </div>
-        `;
-        document.body.style.overflow = 'hidden';
-        throw new Error("Security system activated");
+            <div>
+              <label>Redirect URL</label>
+              <input id="b_redirect" type="text" placeholder="https://...">
+            </div>
+          </div>
+          <label>Button Text</label>
+          <input id="b_btn" type="text" value="Read">
+          <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+            <button id="btnCreateBlog">Publish Blog</button>
+            <span id="b_msg" class="muted"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Create Issue <span class="pill">admin only</span></h2>
+          <label>Title</label>
+          <input id="i_title" type="text" placeholder="Title">
+          <label>Description</label>
+          <textarea id="i_desc" placeholder="Short description"></textarea>
+          <div class="row">
+            <div>
+              <label>Image URL</label>
+              <input id="i_image" type="text" placeholder="https://...">
+            </div>
+            <div>
+              <label>Redirect URL</label>
+              <input id="i_redirect" type="text" placeholder="https://...">
+            </div>
+          </div>
+          <label>Button Text</label>
+          <input id="i_btn" type="text" value="View">
+          <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+            <button id="btnCreateIssue">Publish Issue</button>
+            <span id="i_msg" class="muted"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:16px;">
+        <div class="card">
+          <h2>Blogs</h2>
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <button id="btnRefreshBlogs" class="secondary">Refresh</button>
+          </div>
+          <ul id="blogsList" class="list"></ul>
+        </div>
+        <div class="card">
+          <h2>Issues</h2>
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <button id="btnRefreshIssues" class="secondary">Refresh</button>
+          </div>
+          <ul id="issuesList" class="list"></ul>
+        </div>
+      </div>
+    </div>
+  </main>
+<script>
+(function(){
+  const qs = (id) => document.getElementById(id);
+  const state = { email: null, password: null, role: null };
+
+  function base64(s){ return btoa(unescape(encodeURIComponent(s))); }
+  function authHeader(){ if(!(state.email && state.password)) return {}; return { 'Authorization': 'Basic ' + base64(state.email+ ':' + state.password) }; }
+  async function api(path, opts={}){
+    const res = await fetch(path, { ...opts, headers: { 'Content-Type':'application/json', ...(opts.headers||{}), ...authHeader() }});
+    if(res.status === 401){ throw new Error('AUTH_REQUIRED'); }
+    if(!res.ok){ const t = await res.text().catch(()=> ''); throw new Error(t || ('HTTP_'+res.status)); }
+    const ct = res.headers.get('content-type')||'';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+
+  function saveCreds(){ localStorage.setItem('admin_email', state.email||''); localStorage.setItem('admin_password', state.password||''); }
+  function loadCreds(){ state.email = localStorage.getItem('admin_email')||''; state.password = localStorage.getItem('admin_password')||''; }
+  function clearCreds(){ state.email = state.password = state.role = null; localStorage.removeItem('admin_email'); localStorage.removeItem('admin_password'); }
+
+  function setSignedInUI(signedIn, email){
+    qs('loginCard').classList.toggle('hidden', signedIn);
+    qs('dash').classList.toggle('hidden', !signedIn);
+    qs('btnLogout').classList.toggle('hidden', !signedIn);
+    qs('whoami').textContent = signedIn ? (email + (state.role ? ' ('+state.role+')' : '')) : 'Not signed in';
+  }
+
+  async function loadMe(){
+    try {
+      const me = await api('/api/me');
+      state.role = me.role || null;
+      setSignedInUI(true, me.email || state.email);
+      await Promise.all([refreshBlogs(), refreshIssues()]);
+    } catch (e) {
+      setSignedInUI(false);
+      throw e;
     }
+  }
 
-    // Mutation Observer to detect DOM tampering
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (!document.body.contains(passwordProtection)) {
-                // If password protection element was removed, nuke the page
-                document.body.innerHTML = `
-                    <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#171717; color:white; font-family:sans-serif; text-align:center; padding:20px;">
-                        <div>
-                            <h1 style="color:#ef4444; margin-bottom:20px;">Security Violation Detected</h1>
-                            <p>Unauthorized access attempt logged.</p>
-                            <p style="margin-top:20px; color:#9ca3af;">Unauthorized use is unlawful and prohibited</p>
-                            <p style="margin-top:10px; color:#9ca3af;">All content has been removed for security reasons.</p>
-                        </div>
-                    </div>
-                `;
-                document.body.style.overflow = 'hidden';
-                observer.disconnect();
-                throw new Error("Security violation detected");
-            }
-        });
-    });
-
-    // Start observing the document
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: false,
-        characterData: false
-    });
-
-    // Disable right-click
-    document.addEventListener('contextmenu', function(e) {
-        if (!e.target.matches('input, textarea')) {
-            e.preventDefault();
-            showToast('Right-click disabled for security', 'error');
-        }
-    });
-
-    // Prevent dev tools but allow typing in inputs
-    document.addEventListener('keydown', function(e) {
-        const isInput = e.target.matches('input, textarea, [contenteditable]');
-        
-        // Allow normal typing in inputs
-        if (isInput) {
-            return true;
-        }
-        
-        // Block dev tools shortcuts
-        if (e.key === 'F12' || 
-            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
-            (e.metaKey && e.altKey && e.key === 'I')) {
-            e.preventDefault();
-            showToast('Developer tools are disabled', 'error');
-        }
-    });
-
-    // Disable scrolling and interaction (except for form inputs)
-    document.body.classList.add('password-protected');
-    const preventDefaultScroll = function(e) {
-        if (passwordProtection.style.display !== 'none' && !e.target.matches('input, textarea, select, button')) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-    };
-
-    const scrollEvents = ['wheel', 'touchmove', 'scroll'];
-    scrollEvents.forEach(function(event) {
-        document.addEventListener(event, preventDefaultScroll, {passive: false});
-    });
-
-    // Check if user is remembered (pre-fill form)
-    if (localStorage.getItem('remembered') === 'true') {
-        document.getElementById('email').value = localStorage.getItem('rememberedEmail') || '';
-        document.getElementById('password').value = localStorage.getItem('rememberedPassword') || '';
-        document.getElementById('remember-me').checked = true;
+  async function refreshBlogs(){
+    const list = qs('blogsList'); list.innerHTML = '<li class="muted">Loading…</li>';
+    const items = await api('/api/blogs');
+    list.innerHTML = '';
+    if(!items.length){ list.innerHTML = '<li class="muted">No blogs yet.</li>'; return; }
+    for(const it of items){
+      const li = document.createElement('li'); li.className='item';
+      const meta = document.createElement('div'); meta.className='meta';
+      meta.innerHTML = `<strong>${escapeHtml(it.title||'Untitled')}</strong><span class="muted">#${it.id} · ${new Date(it.created_at).toLocaleString()}</span>`;
+      const actions = document.createElement('div');
+      const del = document.createElement('button'); del.className='danger'; del.textContent = 'Delete';
+      del.onclick = async () => { if(!confirm('Delete blog #' + it.id + '?')) return; await api('/api/blogs?id=' + it.id, { method:'DELETE' }); await refreshBlogs(); };
+      if(state.role === 'admin') actions.appendChild(del);
+      li.appendChild(meta); li.appendChild(actions);
+      list.appendChild(li);
     }
+  }
 
-    // Login form submission
-    document.getElementById('password-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const rememberMe = document.getElementById('remember-me').checked;
+  async function refreshIssues(){
+    const list = qs('issuesList'); list.innerHTML = '<li class="muted">Loading…</li>';
+    const items = await api('/api/issues');
+    list.innerHTML = '';
+    if(!items.length){ list.innerHTML = '<li class="muted">No issues yet.</li>'; return; }
+    for(const it of items){
+      const li = document.createElement('li'); li.className='item';
+      const meta = document.createElement('div'); meta.className='meta';
+      meta.innerHTML = `<strong>${escapeHtml(it.title||'Untitled')}</strong><span class="muted">#${it.id} · ${new Date(it.created_at).toLocaleString()}</span>`;
+      const actions = document.createElement('div');
+      const del = document.createElement('button'); del.className='danger'; del.textContent = 'Delete';
+      del.onclick = async () => { if(!confirm('Delete issue #' + it.id + '?')) return; await api('/api/issues?id=' + it.id, { method:'DELETE' }); await refreshIssues(); };
+      if(state.role === 'admin') actions.appendChild(del);
+      li.appendChild(meta); li.appendChild(actions);
+      list.appendChild(li);
+    }
+  }
 
-    const validUsers = {
-        'whitney@sunsetsandindicas.com': 'sunsetsMAG',
-        'nic': '2900',
-        'admin': 'SUNSETSINDICAS'
-    };
+  function escapeHtml(s){ return (s||'').replace(/[&<>"]+/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
 
-    if (validUsers[email] && validUsers[email] === password) {
-        // Set last login time (current timestamp)
-        localStorage.setItem('lastLogin', new Date().getTime().toString());
+  // Events
+  qs('btnLogin').onclick = async () => {
+    const email = qs('email').value.trim();
+    const password = qs('password').value;
+    qs('loginMsg').textContent = '';
+    if(!email || !password){ qs('loginMsg').textContent = 'Enter email and password'; return; }
+    state.email = email; state.password = password; saveCreds();
+    try { await loadMe(); qs('loginMsg').textContent = ''; } catch(e){ qs('loginMsg').textContent = 'Sign-in failed'; clearCreds(); }
+  };
 
-        // Remember user if checkbox is checked
-        if (rememberMe) {
-            localStorage.setItem('remembered', 'true');
-            localStorage.setItem('rememberedEmail', email);
-            localStorage.setItem('rememberedPassword', password);
-        } else {
-            localStorage.removeItem('remembered');
-            localStorage.removeItem('rememberedEmail');
-            localStorage.removeItem('rememberedPassword');
-        }
+  qs('btnLogout').onclick = () => { clearCreds(); setSignedInUI(false); };
 
+  qs('btnCreateBlog').onclick = async () => {
+    qs('b_msg').textContent = '';
+    try {
+      const payload = { title: qs('b_title').value, description: qs('b_desc').value, image: qs('b_image').value, redirect: qs('b_redirect').value, buttonText: qs('b_btn').value || 'Read' };
+      await api('/api/blogs', { method:'POST', body: JSON.stringify(payload) });
+      qs('b_msg').textContent = 'Published';
+      qs('b_title').value = qs('b_desc').value = qs('b_image').value = qs('b_redirect').value = '';
+      qs('b_btn').value = 'Read';
+      await refreshBlogs();
+    } catch(e) { qs('b_msg').textContent = 'Failed'; }
+  };
 
-            
-            // Correct credentials - grant access
-            passwordProtection.style.opacity = '0';
-            setTimeout(() => {
-                passwordProtection.style.display = 'none';
-                if (mainContent) mainContent.classList.remove('hidden');
-                document.body.classList.remove('password-protected');
-                
-                // Remove scroll prevention
-                scrollEvents.forEach(function(event) {
-                    document.removeEventListener(event, preventDefaultScroll, {passive: false});
-                });
-                
-                // Disconnect the observer after successful auth
-                observer.disconnect();
-            }, 300);
-        } else {
-            showToast('Incorrect email or password. Please try again.', 'error');
-        }
-    });
+  qs('btnCreateIssue').onclick = async () => {
+    qs('i_msg').textContent = '';
+    try {
+      const payload = { title: qs('i_title').value, description: qs('i_desc').value, image: qs('i_image').value, redirect: qs('i_redirect').value, buttonText: qs('i_btn').value || 'View' };
+      await api('/api/issues', { method:'POST', body: JSON.stringify(payload) });
+      qs('i_msg').textContent = 'Published';
+      qs('i_title').value = qs('i_desc').value = qs('i_image').value = qs('i_redirect').value = '';
+      qs('i_btn').value = 'View';
+      await refreshIssues();
+    } catch(e) { qs('i_msg').textContent = 'Failed (admin only)'; }
+  };
 
-    // Periodically check if password protection element still exists
-    setInterval(() => {
-        if (!document.getElementById('password-protection') && passwordProtection.style.display !== 'none') {
-            document.body.innerHTML = `
-                <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#171717; color:white; font-family:sans-serif; text-align:center; padding:20px;">
-                    <div>
-                        <h1 style="color:#ef4444; margin-bottom:20px;">Security Breach Detected</h1>
-                        <p>Unauthorized use is unlawful and prohibited</p>
-                        <p style="margin-top:20px; color:#9ca3af;">Page content has been locked due to security violations.</p>
-                    </div>
-                </div>
-            `;
-            document.body.style.overflow = 'hidden';
-            observer.disconnect();
-            throw new Error("Security breach detected");
-        }
-    }, 1000);
+  qs('btnRefreshBlogs').onclick = refreshBlogs;
+  qs('btnRefreshIssues').onclick = refreshIssues;
+
+  // Auto restore session
+  loadCreds();
+  if(state.email && state.password){
+    loadMe().catch(()=>{});
+  }
 })();
 </script>
-
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#a56ab8',
-                        'primary-dark': '#1a1a1a',
-                        secondary: '#f6f9fc',
-                        dark: '#171717',
-                        light: '#ffffff',
-                        gray: {
-                            100: '#f8f9fa',
-                            200: '#e9ecef',
-                            300: '#dee2e6',
-                            400: '#ced4da',
-                            500: '#adb5bd',
-                            600: '#058E3F',
-                            700: '#04773B',
-                            800: '#1f2937',
-                            900: '#171717',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'card': '0 2px 4px rgba(0,0,0,.04), 0 8px 16px rgba(0,0,0,.08)',
-                        'button': '0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08)',
-                        'button-hover': '0 7px 14px rgba(50,50,93,.1), 0 3px 6px rgba(0,0,0,.08)',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        #toast {
-            position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            background-color: #171717;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: none;
-            align-items: center;
-            z-index: 1000;
-            animation: fadeIn 0.2s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-
-        /* Unified Modal Styles */
-        .custom-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .custom-modal-content {
-            background-color: white;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .custom-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .custom-modal-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #111827;
-        }
-        
-        .custom-modal-close {
-            background: none;
-            border: none;
-            font-size: 1.25rem;
-            cursor: pointer;
-            color: #6b7280;
-        }
-        
-        .custom-modal-body {
-            margin-bottom: 1.5rem;
-        }
-        
-        .custom-modal-input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-        }
-        
-        .custom-modal-input:focus {
-            outline: none;
-            border-color: #a56ab8;
-            box-shadow: 0 0 0 2px rgba(165, 106, 184, 0.2);
-        }
-        
-        .custom-modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.5rem;
-        }
-        
-        .custom-modal-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        
-        .custom-modal-btn-primary {
-            background-color: #a56ab8;
-            color: white;
-            border: none;
-        }
-        
-        .custom-modal-btn-primary:hover {
-            background-color: #1a1a1a;
-        }
-        
-        .custom-modal-btn-secondary {
-            background-color: #f3f4f6;
-            color: #374151;
-            border: none;
-        }
-        
-        .custom-modal-btn-secondary:hover {
-            background-color: #e5e7eb;
-        }
-
-    </style>
-<script>
-    
-    document.addEventListener('DOMContentLoaded', function() {
-    // Get modal elements
-    const modal = document.getElementById('ticket-modal');
-    const openModalBtns = [
-        document.getElementById('submit-ticket-btn'),
-        document.getElementById('submit-ticket-btn-bottom')
-    ];
-    const closeModalBtn = document.getElementById('close-ticket-modal');
-    const cancelModalBtn = document.getElementById('ticket-modal-cancel');
-    const ticketForm = document.getElementById('ticket-form');
-    
-    // Get toast element
-    const toast = document.getElementById('toast');
-    const toastMsg = document.getElementById('toast-msg');
-
-    // Function to open modal
-    function openModal() {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Prevent scrolling
-    }
-
-    // Function to close modal
-    function closeModal() {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto'; // Re-enable scrolling
-    }
-
-    // Function to show toast message
-    function showToast(message) {
-        toastMsg.textContent = message;
-        toast.classList.add('show');
-        
-        // Hide toast after 3 seconds
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
-    }
-
-    // Event listeners for opening modal
-    openModalBtns.forEach(btn => {
-        if (btn) {
-            btn.addEventListener('click', openModal);
-        }
-    });
-
-    // Event listeners for closing modal
-    if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
-    if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
-
-    // Close modal when clicking outside of it
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            closeModal();
-        }
-    });
-
-    // Form submission handler
-    if (ticketForm) {
-        ticketForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form values
-            const subject = document.getElementById('ticket-subject').value;
-            const message = document.getElementById('ticket-message').value;
-            
-            // Here you would typically send the data to your server
-            // For demonstration, we'll just show a success message
-            console.log('Ticket submitted:', { subject, message });
-            
-            // Show success toast
-            showToast('Ticket submitted successfully!');
-            
-            // Close modal and reset form
-            closeModal();
-            ticketForm.reset();
-        });
-    }
-});
-</script>
+</body>
 </html>
