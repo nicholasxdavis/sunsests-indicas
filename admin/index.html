@@ -193,7 +193,13 @@ async function loadSponsors() {
     const ul = document.getElementById('sponsorsList');
     ul.innerHTML = 'Loading...';
     const r = await fetch('/api/admin/sponsors', { headers: authHeader() });
-    const data = await r.json();
+    if (!r.ok) {
+        if (r.status === 401) { ul.innerHTML = 'Enter admin credentials above, then click Refresh.'; return; }
+        ul.innerHTML = 'Failed to load sponsors.'; return;
+    }
+    let data = [];
+    try { data = await r.json(); } catch (_) { ul.innerHTML = 'Failed to parse sponsors.'; return; }
+    if (!Array.isArray(data)) { ul.innerHTML = 'No sponsors yet.'; return; }
     ul.innerHTML = '';
     data.forEach(item => {
         const li = document.createElement('li');

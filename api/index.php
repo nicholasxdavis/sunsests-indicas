@@ -94,7 +94,9 @@ function ensureTables(PDO $pdo): void {
 ensureTables($pdo);
 
 $uri = $_SERVER['REQUEST_URI'] ?? '/api';
-$path = parse_url($uri, PHP_URL_PATH);
+$pathRaw = parse_url($uri, PHP_URL_PATH);
+$path = rtrim($pathRaw, '/');
+if ($path === '') { $path = '/'; }
 
 function jsonInput(): array {
     $raw = file_get_contents('php://input');
@@ -284,7 +286,41 @@ if ($path === '/api/contact' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
+// Admin endpoints
+if ($path === '/api/admin/sponsors' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    requireAdmin($pdo);
+    $stmt = $pdo->query('SELECT u.id as user_id, u.email, s.company_name, s.package, s.slug, s.logo_url, s.status FROM sponsor_profiles s JOIN users u ON u.id = s.user_id ORDER BY s.created_at DESC');
+    echo json_encode($stmt->fetchAll());
+    exit;
+}
+
+if ($path === '/api/admin/users' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    requireAdmin($pdo);
+    $d = jsonInput();
+    $email = trim($d['email'] ?? '');
+    $password = (string)($d['password'] ?? '');
+    $role = in_array(($d['role'] ?? ''), ['admin','sponsor'], true) ? $d['role'] : 'sponsor';
+    if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 3) {
+        http_response_code(422); echo json_encode(['error'=>'INVALID_INPUT']); exit;
+    }
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $stmt = $pdo->prepare('INSERT INTO users (email, password_hash, role) VALUES (:email,:hash,:role)');
+    $stmt->execute([':email'=>$email, ':hash'=>$hash, ':role'=>$role]);
+    $userId = (int)$pdo->lastInsertId();
+    if ($role === 'sponsor') {
+        $company = trim($d['companyName'] ?? '');
+        $package = in_array(($d['package'] ?? ''), ['elite','premium','standard'], true) ? $d['package'] : 'standard';
+        $slug = trim($d['slug'] ?? strtolower(preg_replace('/[^a-z0-9]+/','-', $company)));
+        if (!$company || !$slug) { http_response_code(422); echo json_encode(['error'=>'INVALID_SPONSOR']); exit; }
+        $logo = trim($d['logoUrl'] ?? '');
+        $sp = $pdo->prepare('INSERT INTO sponsor_profiles (user_id, company_name, package, slug, logo_url) VALUES (:uid,:company,:package,:slug,:logo)');
+        $sp->execute([':uid'=>$userId, ':company'=>$company, ':package'=>$package, ':slug'=>$slug, ':logo'=>$logo]);
+    }
+    echo json_encode(['ok'=>true, 'id'=>$userId]);
+    exit;
+}
+
 http_response_code(404);
-echo json_encode(['error' => 'NOT_FOUND']);
+echo json_encode(['error' => 'NOT_FOUND', 'path'=>$path]);
 
 
